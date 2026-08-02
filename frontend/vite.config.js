@@ -10,7 +10,7 @@ export default defineConfig({
     open: false,
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'https://spark-tank-7hlq.onrender.com',
         changeOrigin: true,
       },
     },
