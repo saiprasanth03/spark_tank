@@ -10,6 +10,11 @@ export const AuthProvider = ({ children }) => {
     return savedUser ? JSON.parse(savedUser) : null;
   });
 
+  const [registeredUsers, setRegisteredUsers] = useState(() => {
+    const saved = localStorage.getItem('borrowbridge_registered_users');
+    return saved ? JSON.parse(saved) : [];
+  });
+
   const [token, setToken] = useState(() => localStorage.getItem('borrowbridge_token') || null);
 
   useEffect(() => {
@@ -20,29 +25,58 @@ export const AuthProvider = ({ children }) => {
     }
   }, [user]);
 
+  useEffect(() => {
+    localStorage.setItem('borrowbridge_registered_users', JSON.stringify(registeredUsers));
+  }, [registeredUsers]);
+
   const login = async (email, password) => {
     try {
-      const isAdmin = isAdminEmail(email);
-      const mockUser = {
-        id: 'usr-' + Date.now(),
-        name: isAdmin ? `Admin ${email.split('@')[0].toUpperCase()}` : email.split('@')[0].toUpperCase(),
-        email,
-        phone: '+91 98765 43210',
-        role: isAdmin ? 'Admin' : 'Both',
-        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=250&q=80',
-        location: isAdmin ? 'Vishnu Institute of Technology' : 'San Francisco, CA',
-        joined: 'August 2026',
-        verified: true
-      };
-      setUser(mockUser);
+      const cleanEmail = (email || '').trim().toLowerCase();
+      const cleanPassword = (password || '').trim();
+
+      if (!cleanEmail || !cleanPassword) {
+        toast.error('Please enter both email and password');
+        return false;
+      }
+
+      // Check if Admin
+      const isAdmin = isAdminEmail(cleanEmail);
+      if (isAdmin) {
+        const adminUser = {
+          id: 'usr-admin-' + Date.now(),
+          name: `Admin (${cleanEmail.split('@')[0]})`,
+          email: cleanEmail,
+          phone: '+91 98765 43210',
+          role: 'Admin',
+          avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=250&q=80',
+          location: 'Vishnu Institute Campus',
+          joined: 'August 2026',
+          verified: true
+        };
+        setUser(adminUser);
+        setToken('jwt-admin-' + Date.now());
+        localStorage.setItem('borrowbridge_token', 'jwt-admin-' + Date.now());
+        toast.success(`Authenticated as Authorized Admin (${cleanEmail})`);
+        return true;
+      }
+
+      // Find registered user
+      const existingUser = registeredUsers.find(u => u.email.toLowerCase() === cleanEmail);
+
+      if (!existingUser) {
+        toast.error('Account not registered! Please sign up first.');
+        return false;
+      }
+
+      if (existingUser.password && existingUser.password !== cleanPassword) {
+        toast.error('Incorrect password. Please check your credentials.');
+        return false;
+      }
+
+      setUser(existingUser);
       setToken('jwt-' + Date.now());
       localStorage.setItem('borrowbridge_token', 'jwt-' + Date.now());
-      
-      if (isAdmin) {
-        toast.success(`Logged in as Authorized Admin (${email})!`);
-      } else {
-        toast.success(`Welcome back, ${mockUser.name}!`);
-      }
+      toast.success(`Welcome back, ${existingUser.name}!`);
       return true;
     } catch (err) {
       toast.error('Failed to log in');
@@ -56,18 +90,37 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (userData) => {
     try {
-      const isAdmin = isAdminEmail(userData.email);
+      const cleanEmail = (userData.email || '').trim().toLowerCase();
+      const cleanPassword = (userData.password || '').trim();
+      const cleanName = (userData.name || '').trim();
+
+      if (!cleanEmail || !cleanName || !cleanPassword) {
+        toast.error('Please complete all required fields');
+        return false;
+      }
+
+      // Check if already registered
+      const alreadyExists = registeredUsers.some(u => u.email.toLowerCase() === cleanEmail);
+      if (alreadyExists) {
+        toast.error('An account with this email already exists! Please log in.');
+        return false;
+      }
+
+      const isAdmin = isAdminEmail(cleanEmail);
       const newUser = {
         id: 'usr-' + Date.now(),
-        name: userData.name || 'New User',
-        email: userData.email || 'user@example.com',
-        phone: userData.phone || '+1 (555) 000-0000',
+        name: cleanName,
+        email: cleanEmail,
+        password: cleanPassword,
+        phone: userData.phone || '+91 98765 43210',
         role: isAdmin ? 'Admin' : (userData.role || 'Both'),
         avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=250&q=80',
         location: 'San Francisco, CA',
         joined: 'August 2026',
         verified: true
       };
+
+      setRegisteredUsers(prev => [...prev, newUser]);
       setUser(newUser);
       setToken('jwt-' + Date.now());
       localStorage.setItem('borrowbridge_token', 'jwt-' + Date.now());

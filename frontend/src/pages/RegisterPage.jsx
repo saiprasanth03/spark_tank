@@ -25,7 +25,7 @@ export const RegisterPage = () => {
     }
 
     setIsSubmitting(true);
-    const success = await register({ name, email, phone, role });
+    const success = await register({ name, email, phone, password, role });
     setIsSubmitting(false);
 
     if (success) {
