@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { User, Mail, Phone, Lock, UserCheck, ShieldCheck, ArrowRight } from 'lucide-react';
+import { User, Mail, Phone, Lock, UserCheck, ShieldCheck, ArrowRight, Globe } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export const RegisterPage = () => {
@@ -10,11 +10,24 @@ export const RegisterPage = () => {
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [countryCode, setCountryCode] = useState('+91');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [role, setRole] = useState('Both'); // 'Owner', 'Renter', 'Both'
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const countryCodes = [
+    { code: '+91', flag: '🇮🇳', label: 'India (+91)' },
+    { code: '+1', flag: '🇺🇸', label: 'US/Canada (+1)' },
+    { code: '+44', flag: '🇬🇧', label: 'UK (+44)' },
+    { code: '+61', flag: '🇦🇺', label: 'Australia (+61)' },
+    { code: '+65', flag: '🇸🇬', label: 'Singapore (+65)' },
+    { code: '+971', flag: '🇦🇪', label: 'UAE (+971)' },
+    { code: '+49', flag: '🇩🇪', label: 'Germany (+49)' },
+    { code: '+33', flag: '🇫🇷', label: 'France (+33)' },
+    { code: '+81', flag: '🇯🇵', label: 'Japan (+81)' }
+  ];
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -24,8 +37,15 @@ export const RegisterPage = () => {
       return;
     }
 
+    if (!phone.trim()) {
+      toast.error('Please enter your mobile phone number');
+      return;
+    }
+
+    const fullPhoneNumber = `${countryCode} ${phone.trim()}`;
+
     setIsSubmitting(true);
-    const success = await register({ name, email, phone, password, role });
+    const success = await register({ name, email, phone: fullPhoneNumber, password, role });
     setIsSubmitting(false);
 
     if (success) {
@@ -62,50 +82,66 @@ export const RegisterPage = () => {
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Alex Morgan"
+                placeholder="Enter your full name"
                 className="w-full pl-11 pr-4 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 text-sm font-medium text-slate-900 dark:text-white placeholder-slate-400 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-blue-500"
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                Email Address *
-              </label>
-              <div className="relative">
-                <Mail className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="alex@example.com"
-                  className="w-full pl-11 pr-4 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 text-sm font-medium text-slate-900 dark:text-white placeholder-slate-400 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+              Email Address *
+            </label>
+            <div className="relative">
+              <Mail className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                className="w-full pl-11 pr-4 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 text-sm font-medium text-slate-900 dark:text-white placeholder-slate-400 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-blue-500"
+              />
             </div>
+          </div>
 
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                Phone Number *
-              </label>
-              <div className="relative">
-                <Phone className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+          {/* Country Code & Phone Number Field */}
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+              Mobile Phone Number *
+            </label>
+            <div className="flex gap-2">
+              <div className="relative w-32 flex-shrink-0">
+                <select
+                  value={countryCode}
+                  onChange={(e) => setCountryCode(e.target.value)}
+                  className="w-full py-2.5 px-3 rounded-2xl bg-slate-100 dark:bg-slate-800 text-xs font-bold text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-blue-500 cursor-pointer appearance-none pr-7"
+                >
+                  {countryCodes.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.flag} {c.code}
+                    </option>
+                  ))}
+                </select>
+                <Globe className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
+
+              <div className="relative flex-1">
+                <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="tel"
                   required
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+1 (555) 000-0000"
-                  className="w-full pl-11 pr-4 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 text-sm font-medium text-slate-900 dark:text-white placeholder-slate-400 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-blue-500"
+                  onChange={(e) => setPhone(e.target.value.replace(/[^0-9\s-]/g, ''))}
+                  placeholder="98765 43210"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 text-sm font-medium text-slate-900 dark:text-white placeholder-slate-400 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-blue-500"
                 />
               </div>
             </div>
           </div>
 
           {/* Role Selection */}
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 pt-1">
             <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
               I want to use BorrowBridge to:
             </label>
