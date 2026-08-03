@@ -7,7 +7,17 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
     const savedUser = localStorage.getItem('borrowbridge_user');
-    return savedUser ? JSON.parse(savedUser) : null;
+    if (!savedUser) return null;
+    try {
+      const parsed = JSON.parse(savedUser);
+      if (parsed?.id === 'usr-demo' || parsed?.email === 'alex.morgan@example.com') {
+        localStorage.removeItem('borrowbridge_user');
+        return null;
+      }
+      return parsed;
+    } catch (e) {
+      return null;
+    }
   });
 
   const [registeredUsers, setRegisteredUsers] = useState(() => {
@@ -46,12 +56,14 @@ export const AuthProvider = ({ children }) => {
           id: 'usr-admin-' + Date.now(),
           name: `Admin (${cleanEmail.split('@')[0]})`,
           email: cleanEmail,
-          phone: '+91 98765 43210',
+          phone: 'Not specified',
           role: 'Admin',
-          avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=250&q=80',
+          avatar: null,
           location: 'Vishnu Institute Campus',
           joined: 'August 2026',
-          verified: true
+          verified: true,
+          rating: null,
+          reviews: []
         };
         setUser(adminUser);
         setToken('jwt-admin-' + Date.now());
@@ -112,12 +124,14 @@ export const AuthProvider = ({ children }) => {
         name: cleanName,
         email: cleanEmail,
         password: cleanPassword,
-        phone: userData.phone || '+91 98765 43210',
+        phone: userData.phone || 'Not specified',
         role: isAdmin ? 'Admin' : (userData.role || 'Both'),
-        avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=250&q=80',
-        location: 'San Francisco, CA',
+        avatar: null,
+        location: 'Not specified',
         joined: 'August 2026',
-        verified: true
+        verified: true,
+        rating: null,
+        reviews: []
       };
 
       setRegisteredUsers(prev => [...prev, newUser]);

@@ -16,7 +16,6 @@ import {
   Star, 
   PlusCircle, 
   LogOut,
-  Edit,
   Clock
 } from 'lucide-react';
 
@@ -34,25 +33,7 @@ export const ProfilePage = () => {
   };
 
   const wishlistedItems = items.filter(i => isWishlisted(i.id));
-
-  const sampleReviews = [
-    {
-      id: 1,
-      reviewer: 'Sarah Jenkins',
-      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=250&q=80',
-      rating: 5,
-      date: 'August 2026',
-      comment: 'Alex was super easy to communicate with! Returned the camera in immaculate condition right on time. Would lend to anytime!'
-    },
-    {
-      id: 2,
-      reviewer: 'Marcus Vance',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=250&q=80',
-      rating: 5,
-      date: 'July 2026',
-      comment: 'Great renter! Very respectful with gear and flexible on pickup times.'
-    }
-  ];
+  const userReviews = user?.reviews || [];
 
   if (!user) {
     return (
@@ -68,6 +49,8 @@ export const ProfilePage = () => {
     );
   }
 
+  const initialLetter = user.name ? user.name.charAt(0).toUpperCase() : 'U';
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       
@@ -75,12 +58,19 @@ export const ProfilePage = () => {
       <div className="glass-card p-6 sm:p-8 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
         
         <div className="flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
-          <div className="relative">
-            <img
-              src={user.avatar}
-              alt={user.name}
-              className="w-24 h-24 sm:w-28 sm:h-28 rounded-full object-cover ring-4 ring-blue-600 shadow-lg"
-            />
+          <div className="relative w-24 h-24 sm:w-28 sm:h-28">
+            {user.avatar ? (
+              <img
+                src={user.avatar}
+                alt={user.name}
+                className="w-full h-full rounded-full object-cover ring-4 ring-blue-600 shadow-lg"
+              />
+            ) : (
+              <div className="w-full h-full rounded-full bg-gradient-to-tr from-blue-600 via-teal-500 to-indigo-600 text-white font-extrabold text-3xl sm:text-4xl flex items-center justify-center ring-4 ring-blue-600/30 shadow-lg">
+                {initialLetter}
+              </div>
+            )}
+
             <span className="absolute bottom-1 right-1 p-1.5 rounded-full bg-emerald-500 text-white shadow" title="Verified Member">
               <ShieldCheck className="w-5 h-5" />
             </span>
@@ -103,20 +93,26 @@ export const ProfilePage = () => {
               </span>
               <span className="flex items-center gap-1">
                 <Phone className="w-3.5 h-3.5 text-emerald-500" />
-                {user.phone}
+                {user.phone || 'Not specified'}
               </span>
               <span className="flex items-center gap-1">
                 <MapPin className="w-3.5 h-3.5 text-rose-500" />
-                {user.location}
+                {user.location || 'Not specified'}
               </span>
             </div>
 
             <div className="pt-1 flex items-center justify-center sm:justify-start gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300">
-              <span className="text-amber-500 font-bold flex items-center gap-1">
-                <Star className="w-4 h-4 fill-current" /> 5.0 Rating
-              </span>
+              {user.rating ? (
+                <span className="text-amber-500 font-bold flex items-center gap-1">
+                  <Star className="w-4 h-4 fill-current" /> {user.rating} Rating
+                </span>
+              ) : (
+                <span className="text-blue-600 font-bold bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded-md">
+                  New Member
+                </span>
+              )}
               <span>•</span>
-              <span>Member since {user.joined}</span>
+              <span>Member since {user.joined || 'August 2026'}</span>
             </div>
           </div>
         </div>
@@ -192,7 +188,7 @@ export const ProfilePage = () => {
           }`}
         >
           <Star className="w-4 h-4" />
-          Reviews ({sampleReviews.length})
+          Reviews ({userReviews.length})
         </button>
       </div>
 
@@ -288,29 +284,37 @@ export const ProfilePage = () => {
 
       {/* TAB 4: REVIEWS */}
       {activeTab === 'reviews' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {sampleReviews.map(rev => (
-            <div key={rev.id} className="glass-card p-6 rounded-3xl space-y-4 border border-slate-200/80 dark:border-slate-800">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <img src={rev.avatar} alt={rev.reviewer} className="w-10 h-10 rounded-full object-cover" />
-                  <div>
-                    <h4 className="font-bold text-slate-900 dark:text-white text-sm">{rev.reviewer}</h4>
-                    <span className="text-xs text-slate-400">{rev.date}</span>
+        <div>
+          {userReviews.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {userReviews.map(rev => (
+                <div key={rev.id} className="glass-card p-6 rounded-3xl space-y-4 border border-slate-200/80 dark:border-slate-800">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center">
+                        {rev.reviewer ? rev.reviewer.charAt(0) : 'U'}
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-slate-900 dark:text-white text-sm">{rev.reviewer}</h4>
+                        <span className="text-xs text-slate-400">{rev.date}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1 text-amber-500 font-bold text-sm">
+                      <Star className="w-4 h-4 fill-current" />
+                      {rev.rating}.0
+                    </div>
                   </div>
-                </div>
 
-                <div className="flex items-center gap-1 text-amber-500 font-bold text-sm">
-                  <Star className="w-4 h-4 fill-current" />
-                  {rev.rating}.0
+                  <p className="text-slate-600 dark:text-slate-300 text-sm italic">
+                    "{rev.comment}"
+                  </p>
                 </div>
-              </div>
-
-              <p className="text-slate-600 dark:text-slate-300 text-sm italic">
-                "{rev.comment}"
-              </p>
+              ))}
             </div>
-          ))}
+          ) : (
+            <EmptyState title="No reviews yet" message="When you complete your first rental or borrowing transaction, peer reviews will appear here." />
+          )}
         </div>
       )}
 
