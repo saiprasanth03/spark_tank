@@ -7,20 +7,10 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
     const savedUser = localStorage.getItem('borrowbridge_user');
-    return savedUser ? JSON.parse(savedUser) : {
-      id: 'usr-demo',
-      name: 'Alex Morgan',
-      email: 'alex.morgan@example.com',
-      phone: '+1 (555) 234-5678',
-      role: 'Both',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=250&q=80',
-      location: 'San Francisco, CA',
-      joined: 'August 2026',
-      verified: true
-    };
+    return savedUser ? JSON.parse(savedUser) : null;
   });
 
-  const [token, setToken] = useState(() => localStorage.getItem('borrowbridge_token') || 'demo-jwt-token');
+  const [token, setToken] = useState(() => localStorage.getItem('borrowbridge_token') || null);
 
   useEffect(() => {
     if (user) {

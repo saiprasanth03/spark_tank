@@ -147,21 +147,7 @@ export const LandingPage = ({ onOpenAI }) => {
                 </Link>
               </div>
 
-              {/* Trust Counters & Badges */}
-              <div className="pt-6 border-t border-slate-200/80 dark:border-slate-800 grid grid-cols-3 gap-4 max-w-lg mx-auto lg:mx-0">
-                <div>
-                  <h4 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">5,000+</h4>
-                  <p className="text-xs text-slate-500 font-medium">Items Available</p>
-                </div>
-                <div>
-                  <h4 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">99.8%</h4>
-                  <p className="text-xs text-slate-500 font-medium">Verified Lenders</p>
-                </div>
-                <div>
-                  <h4 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">₹0</h4>
-                  <p className="text-xs text-slate-500 font-medium">Storage Clutter</p>
-                </div>
-              </div>
+
 
             </div>
 

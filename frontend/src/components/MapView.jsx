@@ -1,33 +1,51 @@
-import React from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import React, { useEffect } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import { Link } from 'react-router-dom';
 import L from 'leaflet';
-import { Star, MapPin, ShieldCheck, ArrowRight } from 'lucide-react';
+import 'leaflet/dist/leaflet.css';
+import { Star, MapPin, ArrowRight } from 'lucide-react';
 
-// Custom Leaflet Pin Icon
+// Custom Leaflet Pin Icon with DivIcon
 const customIcon = L.divIcon({
   className: 'custom-leaflet-pin',
-  html: `<div style="background-color: #2563eb; color: white; width: 32px; height: 32px; border-radius: 50%; border: 3px solid white; box-shadow: 0 4px 12px rgba(37,99,235,0.4); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px;">B</div>`,
-  iconSize: [32, 32],
-  iconAnchor: [16, 32],
-  popupAnchor: [0, -32]
+  html: `<div style="background-color: #2563eb; color: white; width: 34px; height: 34px; border-radius: 50%; border: 3px solid white; box-shadow: 0 4px 14px rgba(37,99,235,0.5); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; cursor: pointer;">B</div>`,
+  iconSize: [34, 34],
+  iconAnchor: [17, 34],
+  popupAnchor: [0, -34]
 });
 
-export const MapView = ({ items, height = '500px' }) => {
+// Map Controller Helper to trigger invalidateSize when Map is mounted or resized
+const MapController = ({ center }) => {
+  const map = useMap();
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      map.invalidateSize();
+      if (center) {
+        map.setView(center, map.getZoom());
+      }
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [map, center]);
+  return null;
+};
+
+export const MapView = ({ items = [], height = '500px' }) => {
   const center = items.length > 0
     ? [items[0].location.lat, items[0].location.lng]
     : [37.7749, -122.4194]; // Default SF coordinates
 
   return (
-    <div style={{ height }} className="w-full rounded-2xl overflow-hidden shadow-lg border border-slate-200 dark:border-slate-800 relative z-10">
+    <div style={{ height }} className="w-full rounded-2xl overflow-hidden shadow-lg border border-slate-200 dark:border-slate-800 relative z-10 bg-slate-100 dark:bg-slate-900">
       <MapContainer
         center={center}
-        zoom={13}
+        zoom={12}
         scrollWheelZoom={false}
         className="w-full h-full"
       >
+        <MapController center={center} />
+
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
