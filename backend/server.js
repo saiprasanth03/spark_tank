@@ -18,7 +18,7 @@ let itemsStore = [...sampleItems];
 let usersStore = [];
 let bookingsStore = [];
 
-// Mongoose Schemas (Active if MONGODB_URI is provided)
+// Mongoose Schemas
 let isMongoConnected = false;
 
 const userSchema = new mongoose.Schema({
@@ -32,18 +32,37 @@ const userSchema = new mongoose.Schema({
 });
 
 const itemSchema = new mongoose.Schema({
+  id: String,
   title: { type: String, required: true },
   category: { type: String, required: true },
   description: String,
   dailyRent: { type: Number, required: true },
   deposit: { type: Number, required: true },
+  distance: { type: Number, default: 1.0 },
+  rating: { type: Number, default: 5.0 },
+  reviewCount: { type: Number, default: 1 },
+  availability: { type: String, default: 'Available Now' },
   condition: String,
+  features: [String],
   images: [String],
-  ownerName: String,
-  locationAddress: String
+  owner: {
+    name: String,
+    avatar: String,
+    rating: Number,
+    responseRate: String,
+    verified: Boolean,
+    phone: String,
+    location: String
+  },
+  location: {
+    address: String,
+    lat: Number,
+    lng: Number
+  }
 });
 
 const bookingSchema = new mongoose.Schema({
+  id: String,
   itemId: String,
   itemTitle: String,
   userEmail: String,
@@ -58,18 +77,32 @@ const User = mongoose.model('User', userSchema);
 const Item = mongoose.model('Item', itemSchema);
 const Booking = mongoose.model('Booking', bookingSchema);
 
+// Seed initial sample items if MongoDB collection is empty
+const seedDatabaseIfEmpty = async () => {
+  try {
+    const count = await Item.countDocuments();
+    if (count === 0) {
+      await Item.insertMany(sampleItems);
+      console.log(`🌱 Database seeded with ${sampleItems.length} initial rental items!`);
+    }
+  } catch (err) {
+    console.error('Error seeding initial dataset:', err.message);
+  }
+};
+
 // Connect to MongoDB if URI is present
 if (MONGODB_URI) {
   mongoose.connect(MONGODB_URI)
-    .then(() => {
+    .then(async () => {
       isMongoConnected = true;
       console.log('✅ Connected to MongoDB Database successfully!');
+      await seedDatabaseIfEmpty();
     })
     .catch((err) => {
-      console.error('⚠️ MongoDB connection error (using in-memory fallback):', err.message);
+      console.error('⚠️ MongoDB connection error (using fallback store):', err.message);
     });
 } else {
-  console.log('ℹ️ MONGODB_URI not detected in env. Running with default store (Add MONGODB_URI to connect your cluster).');
+  console.log('ℹ️ MONGODB_URI not detected in env. Running with in-memory store.');
 }
 
 // GET Health Check
@@ -99,9 +132,18 @@ app.get('/api/items', async (req, res) => {
 
 // GET Item by ID
 app.get('/api/items/:id', async (req, res) => {
-  const item = itemsStore.find(i => i.id === req.params.id);
-  if (!item) return res.status(404).json({ success: false, message: 'Item not found' });
-  res.json({ success: true, data: item });
+  try {
+    if (isMongoConnected) {
+      const dbItem = await Item.findOne({ $or: [{ _id: req.params.id }, { id: req.params.id }] });
+      if (dbItem) return res.json({ success: true, data: dbItem });
+    }
+    const item = itemsStore.find(i => i.id === req.params.id);
+    if (!item) return res.status(404).json({ success: false, message: 'Item not found' });
+    res.json({ success: true, data: item });
+  } catch (err) {
+    const item = itemsStore.find(i => i.id === req.params.id);
+    res.json({ success: true, data: item });
+  }
 });
 
 // POST Create Item Listing
@@ -111,17 +153,7 @@ app.post('/api/items', async (req, res) => {
     itemsStore.unshift(newItem);
 
     if (isMongoConnected) {
-      const dbItem = new Item({
-        title: req.body.title,
-        category: req.body.category,
-        description: req.body.description,
-        dailyRent: req.body.dailyRent,
-        deposit: req.body.deposit,
-        condition: req.body.condition,
-        images: req.body.images,
-        ownerName: req.body.ownerName,
-        locationAddress: req.body.location
-      });
+      const dbItem = new Item(newItem);
       await dbItem.save();
     }
 
@@ -169,30 +201,38 @@ app.post('/api/auth/register', async (req, res) => {
 
 // POST Auth Login
 app.post('/api/auth/login', async (req, res) => {
-  const { email } = req.body;
-  let userObj = usersStore.find(u => u.email.toLowerCase() === email.toLowerCase());
+  try {
+    const { email } = req.body;
+    let userObj = null;
 
-  if (isMongoConnected && !userObj) {
-    userObj = await User.findOne({ email });
+    if (isMongoConnected) {
+      userObj = await User.findOne({ email: new RegExp(`^${email}$`, 'i') });
+    }
+
+    if (!userObj) {
+      userObj = usersStore.find(u => u.email.toLowerCase() === email.toLowerCase());
+    }
+
+    if (!userObj) {
+      userObj = {
+        id: `usr-${Date.now()}`,
+        name: email.split('@')[0].toUpperCase(),
+        email,
+        phone: '+91 98765 43210',
+        role: 'Both',
+        joined: 'August 2026'
+      };
+    }
+
+    res.json({
+      success: true,
+      message: 'Logged in successfully',
+      token: `jwt-token-${Date.now()}`,
+      user: userObj
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
   }
-
-  if (!userObj) {
-    userObj = {
-      id: `usr-${Date.now()}`,
-      name: email.split('@')[0].toUpperCase(),
-      email,
-      phone: '+91 98765 43210',
-      role: 'Both',
-      joined: 'August 2026'
-    };
-  }
-
-  res.json({
-    success: true,
-    message: 'Logged in successfully',
-    token: `jwt-token-${Date.now()}`,
-    user: userObj
-  });
 });
 
 // POST AI Assistant Query
