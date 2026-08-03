@@ -6,7 +6,7 @@ const BookingContext = createContext();
 
 export const BookingProvider = ({ children }) => {
   const [items, setItems] = useState(sampleItems);
-  const [wishlist, setWishlist] = useState(['item-1', 'item-4']);
+  const [wishlist, setWishlist] = useState([]);
   const [myListings, setMyListings] = useState([]);
   const [allUsers, setAllUsers] = useState([
     { id: 'usr-1', name: 'Sarah Jenkins', email: 'sarah.j@example.com', role: 'Owner', status: 'Verified', listingsCount: 4, bookingsCount: 38, joined: 'May 2026' },
@@ -16,46 +16,7 @@ export const BookingProvider = ({ children }) => {
     { id: 'usr-5', name: 'Robert Miller', email: 'robert.m@example.com', role: 'Owner', status: 'Pending Verification', listingsCount: 2, bookingsCount: 56, joined: 'August 2026' }
   ]);
 
-  const [myBookings, setMyBookings] = useState([
-    {
-      id: 'bk-101',
-      itemId: 'item-1',
-      itemTitle: 'Canon EOS R5 Full-Frame Mirrorless Camera Kit',
-      itemImage: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=1200&q=80',
-      category: 'Cameras',
-      startDate: '2026-08-15',
-      endDate: '2026-08-18',
-      days: 3,
-      dailyRent: 45,
-      totalRent: 135,
-      deposit: 300,
-      totalPaid: 435,
-      status: 'Confirmed',
-      pickupType: 'Local Pickup',
-      ownerName: 'Sarah Jenkins',
-      ownerPhone: '+1 (555) 234-5678',
-      escrowStatus: 'Held in Escrow'
-    },
-    {
-      id: 'bk-102',
-      itemId: 'item-4',
-      itemTitle: 'DJI Mavic 3 Pro Cine Drone',
-      itemImage: 'https://images.unsplash.com/photo-1508614589041-895b88991e3e?auto=format&fit=crop&w=1200&q=80',
-      category: 'Drones',
-      startDate: '2026-08-01',
-      endDate: '2026-08-03',
-      days: 2,
-      dailyRent: 60,
-      totalRent: 120,
-      deposit: 500,
-      totalPaid: 620,
-      status: 'Completed',
-      pickupType: 'Doorstep Courier',
-      ownerName: 'David Kim',
-      ownerPhone: '+1 (555) 901-2345',
-      escrowStatus: 'Refunded to Renter'
-    }
-  ]);
+  const [myBookings, setMyBookings] = useState([]);
 
   const toggleWishlist = (itemId) => {
     setWishlist(prev => {
@@ -92,12 +53,12 @@ export const BookingProvider = ({ children }) => {
       availability: 'Available Now',
       distance: 0.4,
       owner: {
-        name: 'Alex Morgan',
-        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=250&q=80',
+        name: newItemData.ownerName || 'Verified Lender',
+        avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=250&q=80',
         rating: 5.0,
         responseRate: '100%',
         verified: true,
-        phone: '+1 (555) 234-5678',
+        phone: '+91 98765 43210',
         location: 'San Francisco, CA'
       }
     };
@@ -128,7 +89,7 @@ export const BookingProvider = ({ children }) => {
   const releaseEscrowDeposit = (bookingId) => {
     setMyBookings(prev => prev.map(b => {
       if (b.id === bookingId) {
-        toast.success(`Deposit of $${b.deposit} released back to Renter!`);
+        toast.success(`Deposit of ₹${b.deposit} released back to Renter!`);
         return { ...b, escrowStatus: 'Refunded to Renter', status: 'Completed' };
       }
       return b;

@@ -4,6 +4,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { useBooking } from '../context/BookingContext';
 import { isAdminEmail } from '../data/adminEmails';
+import toast from 'react-hot-toast';
 import { 
   Search, 
   PlusCircle, 
@@ -30,6 +31,14 @@ export const Navbar = ({ onOpenAI }) => {
   const location = useLocation();
 
   const isActive = (path) => location.pathname === path;
+
+  const handleWishlistClick = (e) => {
+    if (!isAuthenticated) {
+      e.preventDefault();
+      toast('Please log in or sign up to view your saved wishlist', { icon: '🔒' });
+      navigate('/login');
+    }
+  };
 
   return (
     <header className="sticky top-0 z-40 w-full glass-panel transition-colors duration-300">
@@ -114,11 +123,12 @@ export const Navbar = ({ onOpenAI }) => {
             {/* Wishlist Link */}
             <Link
               to="/profile?tab=wishlist"
+              onClick={handleWishlistClick}
               className="relative p-2.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all duration-200"
               title="Saved Items"
             >
               <Heart className="w-5 h-5 text-rose-500" />
-              {wishlist.length > 0 && (
+              {isAuthenticated && wishlist.length > 0 && (
                 <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[11px] font-bold w-5 h-5 rounded-full flex items-center justify-center shadow">
                   {wishlist.length}
                 </span>
