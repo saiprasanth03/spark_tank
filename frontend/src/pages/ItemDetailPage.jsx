@@ -15,7 +15,11 @@ import {
   Share2, 
   ArrowLeft,
   ArrowRight,
-  Info
+  Info,
+  ChevronLeft,
+  ChevronRight,
+  X,
+  Maximize2
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -26,6 +30,7 @@ export const ItemDetailPage = () => {
 
   const item = items.find(i => i.id === id) || items[0];
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [slideshowOpen, setSlideshowOpen] = useState(false);
   const wishlisted = isWishlisted(item.id);
 
   // Date selection calculation preview
@@ -33,9 +38,23 @@ export const ItemDetailPage = () => {
   const totalRent = item.dailyRent * selectedDays;
   const totalDue = totalRent + item.deposit;
 
+  const imagesList = item.images && item.images.length > 0 ? item.images : [
+    'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=1200&q=80'
+  ];
+
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href);
     toast.success('Link copied to clipboard!');
+  };
+
+  const nextImage = (e) => {
+    if (e) e.stopPropagation();
+    setActiveImageIndex((prev) => (prev + 1) % imagesList.length);
+  };
+
+  const prevImage = (e) => {
+    if (e) e.stopPropagation();
+    setActiveImageIndex((prev) => (prev - 1 + imagesList.length) % imagesList.length);
   };
 
   return (
@@ -50,7 +69,7 @@ export const ItemDetailPage = () => {
         Back to Listings
       </button>
 
-      {/* Main Grid: Gallery & Main Specs (Left 8 cols), Booking CTA (Right 4 cols) */}
+      {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         
         {/* Left Column (Images, Owner, Specs, Map) */}
@@ -58,23 +77,39 @@ export const ItemDetailPage = () => {
           
           {/* Image Gallery */}
           <div className="space-y-3">
-            <div className="relative aspect-[16/10] rounded-3xl overflow-hidden bg-slate-100 dark:bg-slate-800 shadow-xl">
+            <div 
+              onClick={() => setSlideshowOpen(true)}
+              className="relative aspect-[16/10] rounded-3xl overflow-hidden bg-slate-100 dark:bg-slate-800 shadow-xl group cursor-pointer"
+            >
               <img
-                src={item.images[activeImageIndex]}
+                src={imagesList[activeImageIndex]}
                 alt={item.title}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               />
+
+              <div className="absolute top-4 left-4">
+                <span className="px-3 py-1.5 rounded-full bg-slate-900/80 text-white text-xs font-bold backdrop-blur-md shadow flex items-center gap-1.5">
+                  <Maximize2 className="w-3.5 h-3.5" />
+                  Click to Expand Slideshow
+                </span>
+              </div>
 
               <div className="absolute top-4 right-4 flex items-center gap-2">
                 <button
-                  onClick={handleShare}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleShare();
+                  }}
                   className="p-3 rounded-full bg-white/80 dark:bg-slate-900/80 text-slate-700 dark:text-slate-200 backdrop-blur-md shadow hover:scale-105 transition"
                   title="Share Item"
                 >
                   <Share2 className="w-4 h-4" />
                 </button>
                 <button
-                  onClick={() => toggleWishlist(item.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleWishlist(item.id);
+                  }}
                   className={`p-3 rounded-full backdrop-blur-md shadow hover:scale-105 transition ${
                     wishlisted ? 'bg-rose-500 text-white' : 'bg-white/80 dark:bg-slate-900/80 text-slate-700 dark:text-slate-200'
                   }`}
@@ -82,26 +117,42 @@ export const ItemDetailPage = () => {
                   <Heart className={`w-4 h-4 ${wishlisted ? 'fill-current' : ''}`} />
                 </button>
               </div>
+
+              {/* Navigation Arrows Overlay on Main Image */}
+              {imagesList.length > 1 && (
+                <div className="absolute inset-y-0 inset-x-3 flex items-center justify-between pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    onClick={prevImage}
+                    className="pointer-events-auto p-2.5 rounded-full bg-slate-900/80 text-white backdrop-blur-md hover:bg-blue-600 transition shadow-lg"
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={nextImage}
+                    className="pointer-events-auto p-2.5 rounded-full bg-slate-900/80 text-white backdrop-blur-md hover:bg-blue-600 transition shadow-lg"
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                </div>
+              )}
             </div>
 
-            {/* Thumbnail Carousel */}
-            {item.images.length > 1 && (
-              <div className="flex items-center gap-3 overflow-x-auto pb-1">
-                {item.images.map((img, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setActiveImageIndex(idx)}
-                    className={`relative w-24 h-16 rounded-xl overflow-hidden border-2 transition-all ${
-                      activeImageIndex === idx
-                        ? 'border-blue-600 scale-105 shadow-md'
-                        : 'border-transparent opacity-70 hover:opacity-100'
-                    }`}
-                  >
-                    <img src={img} alt={`Thumb ${idx}`} className="w-full h-full object-cover" />
-                  </button>
-                ))}
-              </div>
-            )}
+            {/* Product Thumbnails Gallery Strip */}
+            <div className="flex items-center gap-3 overflow-x-auto pb-1 scrollbar-none">
+              {imagesList.map((img, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setActiveImageIndex(idx)}
+                  className={`relative w-24 h-16 rounded-2xl overflow-hidden border-2 transition-all flex-shrink-0 ${
+                    activeImageIndex === idx
+                      ? 'border-blue-600 scale-105 shadow-md ring-2 ring-blue-500/40'
+                      : 'border-transparent opacity-70 hover:opacity-100'
+                  }`}
+                >
+                  <img src={img} alt={`Product Thumbnail ${idx}`} className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Title & Category Header */}
@@ -115,8 +166,8 @@ export const ItemDetailPage = () => {
                 {item.condition}
               </span>
               <span className="px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center gap-1">
-                <MapPin className="w-3.5 h-3.5 text-blue-500" />
-                {item.distance} miles away
+                <MapPin className="w-3.5 h-3.5 text-rose-500" />
+                {item.distanceKm || item.distance || 0.8} km away
               </span>
             </div>
 
@@ -169,7 +220,7 @@ export const ItemDetailPage = () => {
             </div>
           </div>
 
-          {/* Description & Included Features */}
+          {/* Description & Specs */}
           <div className="space-y-6 glass-card p-6 rounded-3xl border border-slate-200/80 dark:border-slate-800">
             <div>
               <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
@@ -251,7 +302,7 @@ export const ItemDetailPage = () => {
               </div>
             </div>
 
-            {/* Price Summary Breakdown */}
+            {/* Price Summary Breakdown (Updated Platform Fee to ₹9) */}
             <div className="space-y-2.5 text-xs text-slate-600 dark:text-slate-400 pt-2 border-t border-slate-100 dark:border-slate-800">
               <div className="flex justify-between">
                 <span>Rental (₹{item.dailyRent} × {selectedDays} days)</span>
@@ -265,12 +316,12 @@ export const ItemDetailPage = () => {
                 <span className="font-semibold text-emerald-600 dark:text-emerald-400">₹{item.deposit}</span>
               </div>
               <div className="flex justify-between">
-                <span>Service & Trust Fee</span>
-                <span className="font-semibold text-slate-900 dark:text-white">₹99</span>
+                <span>Platform Fee (Non-refundable)</span>
+                <span className="font-bold text-slate-900 dark:text-white">₹9</span>
               </div>
               <div className="pt-2 border-t border-slate-200 dark:border-slate-700 flex justify-between text-base font-extrabold text-slate-900 dark:text-white">
                 <span>Estimated Total</span>
-                <span className="text-blue-600 dark:text-blue-400">₹{totalDue + 99}</span>
+                <span className="text-blue-600 dark:text-blue-400">₹{totalDue + 9}</span>
               </div>
             </div>
 
@@ -283,18 +334,57 @@ export const ItemDetailPage = () => {
               <ArrowRight className="w-5 h-5" />
             </button>
 
-            {/* Security Guarantee */}
-            <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex items-start gap-2.5 text-xs text-emerald-800 dark:text-emerald-300">
-              <ShieldCheck className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
-              <p>
-                <strong>BorrowBridge Guarantee:</strong> Your deposit is held securely in escrow and released back to you automatically after return.
-              </p>
-            </div>
-
           </div>
         </div>
 
       </div>
+
+      {/* FULLSCREEN IMAGE SLIDESHOW LIGHTBOX MODAL WITH < > NAVIGATION BUTTONS */}
+      {slideshowOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md">
+          
+          <button
+            onClick={() => setSlideshowOpen(false)}
+            className="absolute top-6 right-6 p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition z-50"
+          >
+            <X className="w-6 h-6" />
+          </button>
+
+          {/* Previous Button < */}
+          {imagesList.length > 1 && (
+            <button
+              onClick={prevImage}
+              className="absolute left-6 p-4 rounded-full bg-white/10 hover:bg-blue-600 text-white backdrop-blur-md transition shadow-2xl z-50"
+            >
+              <ChevronLeft className="w-8 h-8" />
+            </button>
+          )}
+
+          {/* Main Slideshow Image */}
+          <div className="max-w-5xl max-h-[80vh] flex flex-col items-center gap-4">
+            <img
+              src={imagesList[activeImageIndex]}
+              alt={item.title}
+              className="max-w-full max-h-[70vh] rounded-3xl object-contain shadow-2xl border border-white/10"
+            />
+            <span className="text-white font-bold text-sm bg-slate-900/80 px-4 py-1.5 rounded-full border border-white/20">
+              Image {activeImageIndex + 1} of {imagesList.length}
+            </span>
+          </div>
+
+          {/* Next Button > */}
+          {imagesList.length > 1 && (
+            <button
+              onClick={nextImage}
+              className="absolute right-6 p-4 rounded-full bg-white/10 hover:bg-blue-600 text-white backdrop-blur-md transition shadow-2xl z-50"
+            >
+              <ChevronRight className="w-8 h-8" />
+            </button>
+          )}
+
+        </div>
+      )}
+
     </div>
   );
 };

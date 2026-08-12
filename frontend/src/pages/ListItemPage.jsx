@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useBooking } from '../context/BookingContext';
+import { useAuth } from '../context/AuthContext';
 import { categories } from '../data/items';
 import { 
   PlusCircle, 
@@ -14,15 +15,17 @@ import {
   Image as ImageIcon,
   ArrowLeft,
   Calculator,
-  TrendingUp,
-  Sliders,
-  Sparkle
+  Lock
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export const ListItemPage = () => {
   const navigate = useNavigate();
   const { addListing } = useBooking();
+  const { user } = useAuth();
+
+  // ROLE RESTRICTION CHECK (Developers & Sellers / Owners only)
+  const isConsumerOnly = user && user.role === 'Consumer / Buyer';
 
   // Form Fields
   const [title, setTitle] = useState('');
@@ -47,8 +50,6 @@ export const ListItemPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // SMART PRICING ALGORITHM LOGIC
-  // Base Price = 2% of Market Value per day
-  // Adjusted by Condition (+10% for Excellent, 0% for Good, -15% for Fair)
   const calculatedBasePrice = Math.round((Number(marketValue) || 40000) * 0.02);
   let conditionFactor = 1.0;
   if (condition === 'Excellent') conditionFactor = 1.10;
@@ -57,8 +58,8 @@ export const ListItemPage = () => {
   const suggestedDailyPrice = Math.round(calculatedBasePrice * conditionFactor);
   const suggestedDeposit = Math.round((Number(marketValue) || 40000) * 0.10);
 
-  const threeDayRate = Math.round(suggestedDailyPrice * 0.93); // ~7% discount
-  const sevenDayRate = Math.round(suggestedDailyPrice * 0.875); // ~12% discount
+  const threeDayRate = Math.round(suggestedDailyPrice * 0.93);
+  const sevenDayRate = Math.round(suggestedDailyPrice * 0.875);
 
   useEffect(() => {
     if (useSuggestedPrice) {
@@ -66,6 +67,34 @@ export const ListItemPage = () => {
       setDeposit(suggestedDeposit);
     }
   }, [marketValue, condition, useSuggestedPrice, suggestedDailyPrice, suggestedDeposit]);
+
+  if (isConsumerOnly) {
+    return (
+      <div className="max-w-md mx-auto px-4 py-20 text-center space-y-6">
+        <div className="glass-card p-8 rounded-3xl space-y-6 border border-slate-200/80 dark:border-slate-800 shadow-xl">
+          <div className="w-16 h-16 rounded-full bg-amber-100 dark:bg-amber-950/80 text-amber-600 flex items-center justify-center mx-auto shadow">
+            <Lock className="w-8 h-8" />
+          </div>
+
+          <div className="space-y-2">
+            <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white">
+              Listing Restricted to Owners & Developers
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+              Your current account role is set to <strong>Consumer / Buyer</strong>. Product listing options are exclusive to verified Sellers, Owners, and Developers.
+            </p>
+          </div>
+
+          <Link
+            to="/profile"
+            className="w-full inline-flex items-center justify-center py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-sm shadow-md transition"
+          >
+            Update Role in Profile
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   const handleImageFileChange = (e) => {
     const file = e.target.files[0];
@@ -140,13 +169,13 @@ export const ListItemPage = () => {
       <div className="space-y-2">
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-xs font-bold">
           <Sparkles className="w-3.5 h-3.5 text-amber-500 fill-current" />
-          Monetize Your Idle Products as a Seller / Owner
+          Owner & Developer Product Portal
         </div>
         <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
           List Your Item for Rent
         </h1>
         <p className="text-slate-500 text-sm max-w-2xl">
-          List your equipment for rent. Our smart pricing engine recommends optimal daily rates based on market value, condition, and nearby demand.
+          List your equipment for rent. Our smart pricing engine recommends optimal daily rates based on market value and condition.
         </p>
       </div>
 
@@ -253,7 +282,7 @@ export const ListItemPage = () => {
           </div>
         </div>
 
-        {/* Section 2: Smart Pricing & Market Logic (MVP Pricing Engine) */}
+        {/* Section 2: Smart Pricing & Duration Rates */}
         <div className="space-y-6">
           <h3 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2 pb-3 border-b border-slate-100 dark:border-slate-800">
             <Calculator className="w-5 h-5 text-emerald-500" />
@@ -286,22 +315,6 @@ export const ListItemPage = () => {
                 <CheckCircle2 className="w-4 h-4" />
                 Accept ₹{suggestedDailyPrice}/day
               </button>
-            </div>
-
-            {/* Breakdown Logic Display */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs text-slate-600 dark:text-slate-300 pt-1">
-              <div className="p-3 rounded-2xl bg-white/70 dark:bg-slate-800/70 border border-slate-200/60 dark:border-slate-700 space-y-1">
-                <span className="text-slate-400 block font-semibold">Value-Based Base Price</span>
-                <span className="font-bold text-slate-800 dark:text-slate-100">₹{marketValue} × 2% = ₹{calculatedBasePrice}/day</span>
-              </div>
-              <div className="p-3 rounded-2xl bg-white/70 dark:bg-slate-800/70 border border-slate-200/60 dark:border-slate-700 space-y-1">
-                <span className="text-slate-400 block font-semibold">Condition Adjustment</span>
-                <span className="font-bold text-emerald-600">{condition} condition ({condition === 'Excellent' ? '+10%' : condition === 'Fair' ? '-15%' : '0%'})</span>
-              </div>
-              <div className="p-3 rounded-2xl bg-white/70 dark:bg-slate-800/70 border border-slate-200/60 dark:border-slate-700 space-y-1">
-                <span className="text-slate-400 block font-semibold">Nearby Market Comparison</span>
-                <span className="font-bold text-blue-600">Similar items: ₹{Math.round(suggestedDailyPrice * 0.9)} – ₹{Math.round(suggestedDailyPrice * 1.1)}/day</span>
-              </div>
             </div>
 
             {/* Duration Discounts Table */}

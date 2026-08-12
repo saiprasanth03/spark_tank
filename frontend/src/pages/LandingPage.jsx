@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useAuth } from '../context/AuthContext';
 import { 
   Search, 
   MapPin, 
@@ -29,6 +30,17 @@ import { ItemCard } from '../components/ItemCard';
 
 export const LandingPage = ({ onOpenAI }) => {
   const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth();
+
+  const handleGetStartedClick = () => {
+    if (isAuthenticated) {
+      navigate('/explore');
+    } else {
+      navigate('/register');
+    }
+  };
+
+  const isConsumerOnly = user && user.role === 'Consumer / Buyer';
 
   const features = [
     {
@@ -117,13 +129,15 @@ export const LandingPage = ({ onOpenAI }) => {
                   Explore Items Nearby
                 </Link>
 
-                <Link
-                  to="/list-item"
-                  className="w-full sm:w-auto px-8 py-4 rounded-2xl glass-card text-slate-800 dark:text-slate-200 font-extrabold text-base border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2"
-                >
-                  <PlusCircle className="w-5 h-5 text-emerald-500" />
-                  List Item as Seller
-                </Link>
+                {!isConsumerOnly && (
+                  <Link
+                    to="/list-item"
+                    className="w-full sm:w-auto px-8 py-4 rounded-2xl glass-card text-slate-800 dark:text-slate-200 font-extrabold text-base border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2"
+                  >
+                    <PlusCircle className="w-5 h-5 text-emerald-500" />
+                    List Item as Seller
+                  </Link>
+                )}
               </div>
 
             </div>
@@ -283,7 +297,7 @@ export const LandingPage = ({ onOpenAI }) => {
         </div>
       </section>
 
-      {/* HOW IT WORKS TIMELINE (Image 1 Update: Step 3 Only Pickup No Meetup) */}
+      {/* HOW IT WORKS TIMELINE */}
       <section id="how-it-works" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
         <div className="text-center space-y-3 max-w-xl mx-auto">
           <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
@@ -314,7 +328,7 @@ export const LandingPage = ({ onOpenAI }) => {
         </div>
       </section>
 
-      {/* VERIFIED ESCROW & POST-HANDOVER REVIEW SAFEGUARD (Replaces fake reviews) */}
+      {/* VERIFIED ESCROW & POST-HANDOVER REVIEW SAFEGUARD */}
       <section id="testimonials" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
         <div className="text-center space-y-3 max-w-2xl mx-auto">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-xs font-bold">
@@ -384,12 +398,12 @@ export const LandingPage = ({ onOpenAI }) => {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-            <Link
-              to="/register"
-              className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-white text-blue-600 font-extrabold text-base hover:bg-blue-50 transition shadow-lg hover:scale-105 active:scale-95"
+            <button
+              onClick={handleGetStartedClick}
+              className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-white text-blue-600 font-extrabold text-base hover:bg-blue-50 transition shadow-lg hover:scale-105 active:scale-95 cursor-pointer"
             >
-              Get Started Free
-            </Link>
+              Get Started
+            </button>
             <Link
               to="/explore"
               className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-extrabold text-base border border-white/30 backdrop-blur-md transition hover:scale-105 active:scale-95"

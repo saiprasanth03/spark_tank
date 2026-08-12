@@ -74,17 +74,19 @@ export const Navbar = ({ onOpenAI }) => {
               Explore Items
             </Link>
 
-            <Link 
-              to="/list-item" 
-              className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
-                isActive('/list-item')
-                  ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30' 
-                  : 'text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400'
-              }`}
-            >
-              <PlusCircle className="w-4 h-4 text-emerald-500" />
-              List Your Item
-            </Link>
+            {(!user || user.role !== 'Consumer / Buyer') && (
+              <Link 
+                to="/list-item" 
+                className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
+                  isActive('/list-item')
+                    ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30' 
+                    : 'text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400'
+                }`}
+              >
+                <PlusCircle className="w-4 h-4 text-emerald-500" />
+                List Your Item
+              </Link>
+            )}
 
             <button
               onClick={onOpenAI}

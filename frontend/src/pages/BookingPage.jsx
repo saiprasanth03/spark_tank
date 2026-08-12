@@ -39,7 +39,7 @@ export const BookingPage = () => {
 
   const totalRent = item.dailyRent * days;
   const deliveryFee = deliveryOption === 'delivery' ? 150.00 : 0.00;
-  const platformFee = 99.00;
+  const platformFee = 9.00; // Non-refundable ₹9 Platform Fee
   const totalAmount = totalRent + deliveryFee + platformFee;
   const totalWithDeposit = totalAmount + item.deposit;
 
@@ -261,8 +261,11 @@ export const BookingPage = () => {
               )}
 
               <div className="flex justify-between">
-                <span>Platform Trust & Guarantee Fee</span>
-                <span className="font-semibold text-slate-900 dark:text-white">₹99.00</span>
+                <span className="flex items-center gap-1">
+                  Platform Fee
+                  <span className="text-[10px] font-bold text-rose-500 bg-rose-50 dark:bg-rose-950/40 px-1.5 py-0.5 rounded">Non-refundable</span>
+                </span>
+                <span className="font-extrabold text-slate-900 dark:text-white">₹9.00</span>
               </div>
 
               <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex justify-between font-bold text-slate-900 dark:text-white">

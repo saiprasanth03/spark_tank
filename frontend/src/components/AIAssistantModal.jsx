@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bot, X, Send, Sparkles, ArrowRight, Camera, Tent, Laptop, ShieldCheck } from 'lucide-react';
+import { Bot, X, Send, Sparkles, ArrowRight, Camera, Tent, Laptop, ShieldCheck, MapPin } from 'lucide-react';
 import { sampleItems } from '../data/items';
 
 export const AIAssistantModal = ({ isOpen, onClose }) => {
@@ -10,11 +10,12 @@ export const AIAssistantModal = ({ isOpen, onClose }) => {
     {
       id: 1,
       sender: 'ai',
-      text: "Hi! I'm BorrowBot 🤖, your AI Rental Concierge. Tell me what you're planning, and I'll find the perfect gear nearby for you!",
+      text: "Hello! I am BorrowBot AI 🤖, your smart rental assistant for Bhimavaram. What gear or equipment are you looking for today?",
       suggestedQueries: [
-        "I need a camera for wildlife photography.",
-        "Recommend gear for a weekend camping trip.",
-        "How does the refundable security deposit work?"
+        "Recommend camera gear in Bhimavaram",
+        "Laptops for programming or video editing",
+        "Power tools or camping kits under ₹350/day",
+        "How does the ₹9 platform fee & deposit escrow work?"
       ]
     }
   ]);
@@ -43,34 +44,63 @@ export const AIAssistantModal = ({ isOpen, onClose }) => {
     setTimeout(() => {
       let aiReply = '';
       let recommendedItems = [];
+      const q = query.toLowerCase().trim();
 
-      const q = query.toLowerCase();
-      if (q.includes('camera') || q.includes('wildlife') || q.includes('photo')) {
-        aiReply = "For wildlife photography, I recommend this top-tier mirrorless setup:";
+      // Dynamic Query Matching Logic
+      if (q.includes('camera') || q.includes('photo') || q.includes('video') || q.includes('lens') || q.includes('gopro') || q.includes('wildlife')) {
+        aiReply = "Here are top-rated cameras and photography gear available for direct pickup in Bhimavaram:";
         recommendedItems = sampleItems.filter(i => i.category === 'Cameras');
-      } else if (q.includes('camp') || q.includes('outdoor') || q.includes('tent')) {
-        aiReply = "Here is the ultimate camping package available nearby:";
-        recommendedItems = sampleItems.filter(i => i.category === 'Camping');
-      } else if (q.includes('laptop') || q.includes('code') || q.includes('work')) {
-        aiReply = "For high-performance work or travel, check out these laptops:";
+      } else if (q.includes('laptop') || q.includes('macbook') || q.includes('code') || q.includes('work') || q.includes('asus')) {
+        aiReply = "Here are high-performance laptops available for rent nearby:";
         recommendedItems = sampleItems.filter(i => i.category === 'Laptops');
-      } else if (q.includes('deposit') || q.includes('how')) {
-        aiReply = "BorrowBridge places a temporary security deposit authorization when you confirm your booking. Once you return the item in its original condition, the deposit is 100% refunded to your original payment method immediately!";
+      } else if (q.includes('projector') || q.includes('movie') || q.includes('screen') || q.includes('tv')) {
+        aiReply = "Here are smart 4K home theater projectors with portable screens:";
+        recommendedItems = sampleItems.filter(i => i.category === 'Projectors');
+      } else if (q.includes('tool') || q.includes('dewalt') || q.includes('drill') || q.includes('work') || q.includes('karcher')) {
+        aiReply = "Here are heavy-duty power tools and equipment kits available locally:";
+        recommendedItems = sampleItems.filter(i => i.category === 'Tools');
+      } else if (q.includes('camp') || q.includes('tent') || q.includes('outdoor') || q.includes('hike')) {
+        aiReply = "Here are all-weather camping tents and outdoor gear packages:";
+        recommendedItems = sampleItems.filter(i => i.category === 'Camping');
+      } else if (q.includes('drone') || q.includes('mavic') || q.includes('dji') || q.includes('aerial')) {
+        aiReply = "Here are flagship 4K/8K cine drones available for instant booking:";
+        recommendedItems = sampleItems.filter(i => i.category === 'Drones');
+      } else if (q.includes('cheap') || q.includes('under') || q.includes('300') || q.includes('budget') || q.includes('350')) {
+        aiReply = "Here are budget-friendly items under ₹350/day:";
+        recommendedItems = sampleItems.filter(i => i.dailyRent <= 350);
+      } else if (q.includes('bhimavaram') || q.includes('near') || q.includes('location') || q.includes('srkr') || q.includes('undi')) {
+        aiReply = "All listings on BorrowBridge are located within a 5.0 km hyperlocal radius in Bhimavaram (SRKR Road, J P Road, Undi Road, P P Road):";
+        recommendedItems = sampleItems.slice(0, 4);
+      } else if (q.includes('fee') || q.includes('deposit') || q.includes('escrow') || q.includes('how')) {
+        aiReply = "BorrowBridge charges a flat non-refundable platform fee of only ₹9.00. Security deposits are held securely in platform escrow and automatically refunded after item return and damage inspection!";
+        recommendedItems = [];
       } else {
-        aiReply = "Based on your request, here are top-rated items available for instant local pickup today:";
-        recommendedItems = sampleItems.slice(0, 3);
+        // Generic Keyword Match across Title & Description
+        const matches = sampleItems.filter(i => 
+          i.title.toLowerCase().includes(q) || 
+          i.description.toLowerCase().includes(q) || 
+          i.category.toLowerCase().includes(q)
+        );
+
+        if (matches.length > 0) {
+          aiReply = `I found ${matches.length} matching item(s) for "${query}":`;
+          recommendedItems = matches;
+        } else {
+          aiReply = `I found top verified equipment near Bhimavaram for "${query}". Check out these popular choices:`;
+          recommendedItems = sampleItems.slice(0, 3);
+        }
       }
 
       const aiMsg = {
         id: Date.now() + 1,
         sender: 'ai',
         text: aiReply,
-        items: recommendedItems.slice(0, 3)
+        items: recommendedItems.slice(0, 4)
       };
 
       setMessages(prev => [...prev, aiMsg]);
       setIsTyping(false);
-    }, 700);
+    }, 600);
   };
 
   return (
@@ -96,7 +126,7 @@ export const AIAssistantModal = ({ isOpen, onClose }) => {
                 </h3>
                 <p className="text-xs text-blue-100 flex items-center gap-1">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                  Hyperlocal Rental Concierge
+                  Hyperlocal Bhimavaram Concierge
                 </p>
               </div>
             </div>
@@ -125,7 +155,7 @@ export const AIAssistantModal = ({ isOpen, onClose }) => {
                 >
                   <p>{msg.text}</p>
 
-                  {/* Render Item Recommendation Cards if attached */}
+                  {/* Render Item Recommendation Cards */}
                   {msg.items && msg.items.length > 0 && (
                     <div className="mt-3 space-y-2">
                       {msg.items.map(item => (
@@ -147,7 +177,7 @@ export const AIAssistantModal = ({ isOpen, onClose }) => {
                               {item.title}
                             </p>
                             <p className="text-[11px] font-semibold text-blue-600 dark:text-blue-400">
-                              ₹{item.dailyRent}/day • {item.distance} mi away
+                              ₹{item.dailyRent}/day • {item.distanceKm || item.distance || 0.8} km away
                             </p>
                           </div>
                           <ArrowRight className="w-4 h-4 text-slate-400" />
@@ -196,7 +226,7 @@ export const AIAssistantModal = ({ isOpen, onClose }) => {
               type="text"
               value={inputQuery}
               onChange={(e) => setInputQuery(e.target.value)}
-              placeholder="Ask BorrowBot anything..."
+              placeholder="Ask BorrowBot for any gear or price..."
               className="flex-1 px-4 py-2.5 rounded-full bg-slate-100 dark:bg-slate-800 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <button

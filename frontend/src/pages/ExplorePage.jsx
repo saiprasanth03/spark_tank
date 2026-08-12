@@ -14,8 +14,11 @@ import {
   ArrowUpDown,
   X,
   Sparkles,
-  Navigation
+  Navigation,
+  Compass,
+  CheckCircle2
 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export const ExplorePage = () => {
   const { items } = useBooking();
@@ -26,10 +29,35 @@ export const ExplorePage = () => {
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
   const [selectedCity, setSelectedCity] = useState('Bhimavaram');
   const [maxDistanceKm, setMaxDistanceKm] = useState(5); // Capped strictly up to 5km max!
-  const [sortBy, setSortBy] = useState('popular'); // 'popular', 'price-asc', 'price-desc', 'rating', 'distance'
-  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'map'
+  const [sortBy, setSortBy] = useState('popular');
+  const [viewMode, setViewMode] = useState('grid');
+
+  // Exact Geolocation state
+  const [gpsLocation, setGpsLocation] = useState(null);
+  const [isLocating, setIsLocating] = useState(false);
 
   const cities = ['Bhimavaram', 'Visakhapatnam', 'Vijayawada', 'Hyderabad', 'Kakinada', 'Rajahmundry'];
+
+  const handleDetectGPSLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error('Geolocation is not supported by your browser');
+      return;
+    }
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        setGpsLocation({ lat: latitude, lng: longitude });
+        setSelectedCity(`Exact GPS (${latitude.toFixed(3)}°, ${longitude.toFixed(3)}°)`);
+        setIsLocating(false);
+        toast.success(`Exact GPS Location detected: (${latitude.toFixed(4)}°, ${longitude.toFixed(4)}°)`);
+      },
+      (err) => {
+        setIsLocating(false);
+        toast.error('Location permission denied. Showing Bhimavaram default.');
+      }
+    );
+  };
 
   // Filtered & Sorted items computation
   const filteredItems = useMemo(() => {
@@ -103,8 +131,18 @@ export const ExplorePage = () => {
           </p>
         </div>
 
-        {/* Location Dropdown & View Mode */}
+        {/* Location Dropdown & GPS Permission Detector Button */}
         <div className="flex flex-wrap items-center gap-3">
+          <button
+            onClick={handleDetectGPSLocation}
+            disabled={isLocating}
+            className="px-4 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs shadow-md transition flex items-center gap-2"
+            title="Request Exact GPS Permission"
+          >
+            <Compass className={`w-4 h-4 ${isLocating ? 'animate-spin' : ''}`} />
+            {isLocating ? 'Detecting GPS...' : '📍 Use My Exact GPS Location'}
+          </button>
+
           <div className="relative">
             <Navigation className="w-4 h-4 text-blue-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <select
