@@ -46,8 +46,11 @@ export const AIAssistantModal = ({ isOpen, onClose }) => {
       let recommendedItems = [];
       const q = query.toLowerCase().trim();
 
-      // Dynamic Query Matching Logic
-      if (q.includes('camera') || q.includes('photo') || q.includes('video') || q.includes('lens') || q.includes('gopro') || q.includes('wildlife')) {
+      // PRIORITIZE PLATFORM QUESTIONS FIRST (Fee, Escrow, Deposit, How it works)
+      if (q.includes('fee') || q.includes('deposit') || q.includes('escrow') || q.includes('how does') || q.includes('how it') || q.includes('platform') || q.includes('pay') || q.includes('trust')) {
+        aiReply = "BorrowBridge Platform Policies & Safety Guarantees:\n\n1. Flat Platform Fee: Only ₹9.00 (non-refundable) per completed reservation.\n2. Security Deposit: A temporary refundable deposit is authorized at booking and held safely in platform escrow.\n3. Automatic Refund: Once the item is inspected and returned in original condition, your deposit is 100% refunded back to your bank account immediately!";
+        recommendedItems = [];
+      } else if (q.includes('camera') || q.includes('photo') || q.includes('video') || q.includes('lens') || q.includes('gopro') || q.includes('wildlife')) {
         aiReply = "Here are top-rated cameras and photography gear available for direct pickup in Bhimavaram:";
         recommendedItems = sampleItems.filter(i => i.category === 'Cameras');
       } else if (q.includes('laptop') || q.includes('macbook') || q.includes('code') || q.includes('work') || q.includes('asus')) {
@@ -71,9 +74,6 @@ export const AIAssistantModal = ({ isOpen, onClose }) => {
       } else if (q.includes('bhimavaram') || q.includes('near') || q.includes('location') || q.includes('srkr') || q.includes('undi')) {
         aiReply = "All listings on BorrowBridge are located within a 5.0 km hyperlocal radius in Bhimavaram (SRKR Road, J P Road, Undi Road, P P Road):";
         recommendedItems = sampleItems.slice(0, 4);
-      } else if (q.includes('fee') || q.includes('deposit') || q.includes('escrow') || q.includes('how')) {
-        aiReply = "BorrowBridge charges a flat non-refundable platform fee of only ₹9.00. Security deposits are held securely in platform escrow and automatically refunded after item return and damage inspection!";
-        recommendedItems = [];
       } else {
         // Generic Keyword Match across Title & Description
         const matches = sampleItems.filter(i => 
@@ -100,7 +100,7 @@ export const AIAssistantModal = ({ isOpen, onClose }) => {
 
       setMessages(prev => [...prev, aiMsg]);
       setIsTyping(false);
-    }, 600);
+    }, 500);
   };
 
   return (
@@ -147,9 +147,9 @@ export const AIAssistantModal = ({ isOpen, onClose }) => {
                 className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}
               >
                 <div
-                  className={`max-w-[85%] p-3.5 rounded-2xl text-sm leading-relaxed shadow-sm ${
+                  className={`max-w-[88%] p-3.5 rounded-2xl text-sm leading-relaxed shadow-sm whitespace-pre-line ${
                     msg.sender === 'user'
-                      ? 'bg-blue-600 text-white rounded-br-none'
+                      ? 'bg-blue-600 text-white rounded-br-none font-medium'
                       : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-bl-none'
                   }`}
                 >
@@ -165,7 +165,7 @@ export const AIAssistantModal = ({ isOpen, onClose }) => {
                             onClose();
                             navigate(`/item/${item.id}`);
                           }}
-                          className="flex items-center gap-3 p-2 bg-slate-100 dark:bg-slate-700/60 rounded-xl hover:bg-blue-50 dark:hover:bg-blue-900/30 cursor-pointer transition border border-slate-200 dark:border-slate-600"
+                          className="flex items-center gap-3 p-2.5 bg-slate-100 dark:bg-slate-700/60 rounded-xl hover:bg-blue-50 dark:hover:bg-blue-900/30 cursor-pointer transition border border-slate-200 dark:border-slate-600"
                         >
                           <img
                             src={item.images[0]}
@@ -189,12 +189,12 @@ export const AIAssistantModal = ({ isOpen, onClose }) => {
 
                 {/* Suggested Query Buttons */}
                 {msg.suggestedQueries && (
-                  <div className="mt-3 flex flex-wrap gap-1.5 max-w-[90%]">
+                  <div className="mt-3 flex flex-wrap gap-1.5 max-w-[95%]">
                     {msg.suggestedQueries.map((sq, idx) => (
                       <button
                         key={idx}
                         onClick={() => handleSend(sq)}
-                        className="px-3 py-1.5 text-xs font-medium bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 rounded-xl border border-blue-200 dark:border-blue-800 hover:bg-blue-100 transition text-left"
+                        className="px-3 py-1.5 text-xs font-semibold bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 rounded-xl border border-blue-200 dark:border-blue-800 hover:bg-blue-100 transition text-left shadow-sm"
                       >
                         💡 {sq}
                       </button>
@@ -226,7 +226,7 @@ export const AIAssistantModal = ({ isOpen, onClose }) => {
               type="text"
               value={inputQuery}
               onChange={(e) => setInputQuery(e.target.value)}
-              placeholder="Ask BorrowBot for any gear or price..."
+              placeholder="Ask BorrowBot for any gear or platform questions..."
               className="flex-1 px-4 py-2.5 rounded-full bg-slate-100 dark:bg-slate-800 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <button

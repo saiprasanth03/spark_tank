@@ -9,14 +9,13 @@ import {
   Search, 
   Map, 
   LayoutGrid, 
-  IndianRupee, 
   MapPin, 
   ArrowUpDown,
   X,
-  Sparkles,
   Navigation,
   Compass,
-  CheckCircle2
+  SlidersHorizontal,
+  Sparkles
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -33,7 +32,6 @@ export const ExplorePage = () => {
   const [viewMode, setViewMode] = useState('grid');
 
   // Exact Geolocation state
-  const [gpsLocation, setGpsLocation] = useState(null);
   const [isLocating, setIsLocating] = useState(false);
 
   const cities = ['Bhimavaram', 'Visakhapatnam', 'Vijayawada', 'Hyderabad', 'Kakinada', 'Rajahmundry'];
@@ -45,12 +43,23 @@ export const ExplorePage = () => {
     }
     setIsLocating(true);
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
+      async (pos) => {
         const { latitude, longitude } = pos.coords;
-        setGpsLocation({ lat: latitude, lng: longitude });
-        setSelectedCity(`Exact GPS (${latitude.toFixed(3)}°, ${longitude.toFixed(3)}°)`);
-        setIsLocating(false);
-        toast.success(`Exact GPS Location detected: (${latitude.toFixed(4)}°, ${longitude.toFixed(4)}°)`);
+
+        try {
+          // Attempt reverse geocoding for exact village/town name
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+          const data = await res.json();
+          const placeName = data.address?.village || data.address?.town || data.address?.city_district || data.address?.suburb || data.address?.city || 'Bhimavaram';
+          setSelectedCity(placeName);
+          toast.success(`Exact location set to ${placeName}!`);
+        } catch (e) {
+          // Fallback to Bhimavaram (Local Zone) without showing raw lat/lng numbers
+          setSelectedCity('Bhimavaram (Local Zone)');
+          toast.success('Exact location set to Bhimavaram (Local Zone)!');
+        } finally {
+          setIsLocating(false);
+        }
       },
       (err) => {
         setIsLocating(false);
@@ -112,43 +121,46 @@ export const ExplorePage = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       
-      {/* Hyperlocal Header */}
-      <div className="glass-card p-6 sm:p-8 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6 bg-gradient-to-r from-blue-900/10 via-teal-900/10 to-indigo-900/10">
-        <div className="space-y-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 text-xs font-bold shadow-sm">
-            <MapPin className="w-3.5 h-3.5 text-rose-500 fill-current" />
-            Strict Hyperlocal Radius (Max 5 km)
+      {/* Hyperlocal Header - Modern Craft Design */}
+      <div className="relative rounded-3xl overflow-hidden p-6 sm:p-10 bg-slate-900 text-white shadow-2xl border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="space-y-3 max-w-2xl z-10">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30 text-xs font-extrabold tracking-wide uppercase">
+            <MapPin className="w-3.5 h-3.5 text-rose-400 fill-current" />
+            Hyperlocal Radius Capped Up to 5.0 km
           </div>
           
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight flex flex-wrap items-center gap-2">
-            Rentals Near You in
-            <span className="text-blue-600 dark:text-blue-400 underline decoration-blue-500/30">
+          <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight">
+            Rentals Available in{' '}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-teal-300 to-indigo-300">
               {selectedCity}
             </span>
           </h1>
-          <p className="text-slate-600 dark:text-slate-400 text-sm">
-            Browse {filteredItems.length} verified items available within a 5 km walking/short-drive radius in {selectedCity}
+
+          <p className="text-slate-400 text-sm font-medium">
+            Showing {filteredItems.length} verified listings within short walking or drive distance in {selectedCity}
           </p>
         </div>
 
         {/* Location Dropdown & GPS Permission Detector Button */}
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3 z-10">
           <button
             onClick={handleDetectGPSLocation}
             disabled={isLocating}
-            className="px-4 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs shadow-md transition flex items-center gap-2"
+            className="px-5 py-3 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-xs shadow-lg shadow-blue-600/30 transition flex items-center gap-2"
             title="Request Exact GPS Permission"
           >
             <Compass className={`w-4 h-4 ${isLocating ? 'animate-spin' : ''}`} />
-            {isLocating ? 'Detecting GPS...' : '📍 Use My Exact GPS Location'}
+            {isLocating ? 'Detecting Location...' : '📍 Use My Exact GPS Location'}
           </button>
 
           <div className="relative">
-            <Navigation className="w-4 h-4 text-blue-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <Navigation className="w-4 h-4 text-blue-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <select
               value={selectedCity}
               onChange={(e) => setSelectedCity(e.target.value)}
-              className="pl-10 pr-8 py-2.5 rounded-2xl bg-white dark:bg-slate-800 text-xs font-bold text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 shadow-sm focus:ring-2 focus:ring-blue-500 cursor-pointer"
+              className="pl-10 pr-8 py-3 rounded-2xl bg-slate-800 text-xs font-bold text-white border border-slate-700 shadow-sm focus:ring-2 focus:ring-blue-500 cursor-pointer"
             >
               {cities.map(city => (
                 <option key={city} value={city}>📍 {city}</option>
@@ -156,17 +168,17 @@ export const ExplorePage = () => {
             </select>
           </div>
 
-          <div className="flex items-center gap-1.5 bg-slate-200/70 dark:bg-slate-800/80 p-1.5 rounded-2xl border border-slate-300 dark:border-slate-700">
+          <div className="flex items-center gap-1 bg-slate-800 p-1.5 rounded-2xl border border-slate-700">
             <button
               onClick={() => setViewMode('grid')}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-extrabold transition-all ${
                 viewMode === 'grid'
                   ? 'bg-blue-600 text-white shadow-md'
-                  : 'text-slate-700 dark:text-slate-300 hover:text-blue-600'
+                  : 'text-slate-400 hover:text-white'
               }`}
             >
               <LayoutGrid className="w-4 h-4" />
-              Grid View
+              Grid
             </button>
             
             <button
@@ -174,11 +186,11 @@ export const ExplorePage = () => {
               className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-extrabold transition-all ${
                 viewMode === 'map'
                   ? 'bg-blue-600 text-white shadow-md'
-                  : 'text-slate-700 dark:text-slate-300 hover:text-blue-600'
+                  : 'text-slate-400 hover:text-white'
               }`}
             >
               <Map className="w-4 h-4" />
-              Map View
+              Map
             </button>
           </div>
         </div>
