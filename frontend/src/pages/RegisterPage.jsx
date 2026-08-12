@@ -143,21 +143,25 @@ export const RegisterPage = () => {
           {/* Role Selection */}
           <div className="space-y-1.5 pt-1">
             <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-              I want to use BorrowBridge to:
+              I want to register on BorrowBridge as:
             </label>
             <div className="grid grid-cols-3 gap-2">
-              {['Owner', 'Renter', 'Both'].map((r) => (
+              {[
+                { id: 'Seller / Owner', label: 'Seller / Owner' },
+                { id: 'Consumer / Buyer', label: 'Consumer / Buyer' },
+                { id: 'Both', label: 'Both' }
+              ].map((r) => (
                 <button
                   type="button"
-                  key={r}
-                  onClick={() => setRole(r)}
-                  className={`py-2 rounded-xl text-xs font-bold border transition ${
-                    role === r
+                  key={r.id}
+                  onClick={() => setRole(r.id)}
+                  className={`py-2 px-2 rounded-xl text-[11px] font-bold border transition ${
+                    role === r.id
                       ? 'bg-blue-600 text-white border-blue-600 shadow'
                       : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-200'
                   }`}
                 >
-                  {r === 'Owner' ? 'Lend Items' : r === 'Renter' ? 'Borrow Items' : 'Both'}
+                  {r.label}
                 </button>
               ))}
             </div>

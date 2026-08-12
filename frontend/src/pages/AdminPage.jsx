@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useBooking } from '../context/BookingContext';
 import { categories } from '../data/items';
-import { isAdminEmail, ALLOWED_ADMIN_EMAILS } from '../data/adminEmails';
+import { isAdminEmail } from '../data/adminEmails';
 import { 
   ShieldCheck, 
   Users, 
@@ -20,18 +20,31 @@ import {
   Sliders, 
   Bot, 
   TrendingUp, 
-  ArrowUpRight,
   FileSpreadsheet,
   ShieldAlert,
-  LogIn,
-  KeyRound
+  Edit3,
+  X,
+  RotateCcw,
+  AlertTriangle
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export const AdminPage = () => {
   const navigate = useNavigate();
-  const { user, loginAsAdminEmail } = useAuth();
-  const { items, myBookings, allUsers, deleteItem, toggleVerifyUser, releaseEscrowDeposit } = useBooking();
+  const { user } = useAuth();
+  const { 
+    items, 
+    myBookings, 
+    allUsers, 
+    updateItem, 
+    deleteItem, 
+    updateUser, 
+    deleteUser, 
+    toggleVerifyUser, 
+    updateBooking, 
+    releaseEscrowDeposit, 
+    deductEscrowDeposit 
+  } = useBooking();
   
   const [activeTab, setActiveTab] = useState('overview');
   const [searchQuery, setSearchQuery] = useState('');
@@ -39,6 +52,12 @@ export const AdminPage = () => {
 
   const [commissionRate, setCommissionRate] = useState(10);
   const [escrowHoldDays, setEscrowHoldDays] = useState(3);
+
+  // EDIT MODAL STATES
+  const [editingItem, setEditingItem] = useState(null);
+  const [editingUser, setEditingUser] = useState(null);
+  const [editingBooking, setEditingBooking] = useState(null);
+  const [damageDeductionInput, setDamageDeductionInput] = useState(500);
 
   // STRICT SECURITY CHECK
   const isAuthorizedAdmin = user && isAdminEmail(user.email);
@@ -56,7 +75,7 @@ export const AdminPage = () => {
               Access Restricted
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-              The Admin Portal is restricted to authorized institutional administrators only.
+              The Admin Portal is restricted to authorized administrators only.
             </p>
           </div>
 
@@ -71,7 +90,7 @@ export const AdminPage = () => {
     );
   }
 
-  // Derived stats for authorized admins
+  // Derived stats
   const totalListings = items.length;
   const totalVolume = items.reduce((acc, curr) => acc + (curr.dailyRent * 5), 0) + 12400;
   const totalDepositsHeld = myBookings.filter(b => b.escrowStatus === 'Held in Escrow').reduce((acc, curr) => acc + curr.deposit, 0) + 8400;
@@ -96,20 +115,20 @@ export const AdminPage = () => {
             Authenticated Administrator: {user.email}
           </div>
           <h1 className="text-3xl font-extrabold tracking-tight">
-            Platform Management & Escrow Operations
+            Full Admin Control & Escrow Governance Portal
           </h1>
           <p className="text-slate-300 text-sm mt-1">
-            Monitor real-time rental transactions, manage peer listings, oversee user trust verification, and resolve deposit escrows.
+            Modify any product listing, manage user credentials & roles, resolve escrow deposit claims, and configure system rules.
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           <button
-            onClick={() => toast.success('Platform analytics report exported to CSV')}
+            onClick={() => toast.success('Platform governance report exported to CSV')}
             className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-extrabold backdrop-blur-md transition flex items-center gap-2 border border-white/20"
           >
             <FileSpreadsheet className="w-4 h-4 text-emerald-400" />
-            Export Audit Report
+            Export Audit Logs
           </button>
         </div>
       </div>
@@ -143,7 +162,7 @@ export const AdminPage = () => {
             {totalListings}
           </h3>
           <p className="text-xs text-blue-600 font-bold">
-            Across 10 Hyperlocal Categories
+            Full Admin Edit Controls Active
           </p>
         </div>
 
@@ -158,7 +177,7 @@ export const AdminPage = () => {
             ₹{totalDepositsHeld.toLocaleString()}
           </h3>
           <p className="text-xs text-amber-600 font-bold">
-            100% Secured in Escrow
+            Escrow Refund & Damage Override
           </p>
         </div>
 
@@ -170,10 +189,10 @@ export const AdminPage = () => {
             </div>
           </div>
           <h3 className="text-3xl font-extrabold text-slate-900 dark:text-white">
-            1,480
+            {allUsers.length}
           </h3>
           <p className="text-xs text-purple-600 font-bold">
-            99.8% Verification Rate
+            Roles & Status Editable
           </p>
         </div>
       </div>
@@ -278,25 +297,21 @@ export const AdminPage = () => {
 
             <div className="space-y-3 text-xs text-slate-600 dark:text-slate-300">
               <div className="p-3 rounded-2xl bg-slate-100 dark:bg-slate-800 space-y-1">
-                <span className="font-bold text-emerald-600">New Listing Approved</span>
-                <p>Canon EOS R5 posted by Sarah Jenkins</p>
-                <span className="text-[10px] text-slate-400">2 mins ago</span>
+                <span className="font-bold text-emerald-600">Product Edited</span>
+                <p>Admin updated rate for Canon EOS R5</p>
+                <span className="text-[10px] text-slate-400">Just now</span>
               </div>
               <div className="p-3 rounded-2xl bg-slate-100 dark:bg-slate-800 space-y-1">
-                <span className="font-bold text-blue-600">Escrow Authorized</span>
-                <p>$300 deposit held for Booking #bk-101</p>
-                <span className="text-[10px] text-slate-400">14 mins ago</span>
-              </div>
-              <div className="p-3 rounded-2xl bg-slate-100 dark:bg-slate-800 space-y-1">
-                <span className="font-bold text-purple-600">Identity Verified</span>
-                <p>Government ID verified for Marcus Vance</p>
-                <span className="text-[10px] text-slate-400">1 hour ago</span>
+                <span className="font-bold text-blue-600">User Role Updated</span>
+                <p>Admin set role to Seller / Owner for Sarah Jenkins</p>
+                <span className="text-[10px] text-slate-400">10 mins ago</span>
               </div>
             </div>
           </div>
         </div>
       )}
 
+      {/* TAB 2: LISTINGS CONTROL (FULL EDITABILITY) */}
       {activeTab === 'listings' && (
         <div className="glass-card p-6 rounded-3xl space-y-6 border border-slate-200/80 dark:border-slate-800">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -350,13 +365,15 @@ export const AdminPage = () => {
                     <td className="p-3.5 font-bold text-emerald-600">₹{item.deposit}</td>
                     <td className="p-3.5">{item.condition}</td>
                     <td className="p-3.5 text-right space-x-2">
-                      <Link
-                        to={`/item/${item.id}`}
-                        className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 text-slate-600 dark:text-slate-300 hover:text-blue-600 inline-block"
-                        title="View Listing Page"
+                      <button
+                        onClick={() => setEditingItem({ ...item })}
+                        className="px-3 py-1.5 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-700 transition inline-flex items-center gap-1"
+                        title="Edit Item Details"
                       >
-                        <Eye className="w-4 h-4" />
-                      </Link>
+                        <Edit3 className="w-3.5 h-3.5" />
+                        Edit Item
+                      </button>
+
                       <button
                         onClick={() => deleteItem(item.id)}
                         className="p-2 rounded-lg bg-rose-50 dark:bg-rose-950/40 text-rose-600 hover:bg-rose-100 transition inline-block"
@@ -373,10 +390,11 @@ export const AdminPage = () => {
         </div>
       )}
 
+      {/* TAB 3: USER MANAGEMENT (FULL EDITABILITY) */}
       {activeTab === 'users' && (
         <div className="glass-card p-6 rounded-3xl space-y-6 border border-slate-200/80 dark:border-slate-800">
           <h3 className="font-bold text-slate-900 dark:text-white text-lg">
-            Registered Marketplace Users
+            Registered Marketplace Users & Roles
           </h3>
 
           <div className="overflow-x-auto">
@@ -387,8 +405,7 @@ export const AdminPage = () => {
                   <th className="p-3.5">Email</th>
                   <th className="p-3.5">Role</th>
                   <th className="p-3.5">Verification Status</th>
-                  <th className="p-3.5">Listings</th>
-                  <th className="p-3.5">Joined</th>
+                  <th className="p-3.5">Phone & Location</th>
                   <th className="p-3.5 rounded-r-xl text-right">Actions</th>
                 </tr>
               </thead>
@@ -397,7 +414,7 @@ export const AdminPage = () => {
                   <tr key={u.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
                     <td className="p-3.5 font-bold">{u.name}</td>
                     <td className="p-3.5 text-slate-500">{u.email}</td>
-                    <td className="p-3.5 font-semibold">{u.role}</td>
+                    <td className="p-3.5 font-semibold text-blue-600 dark:text-blue-400">{u.role}</td>
                     <td className="p-3.5">
                       <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold ${
                         u.status === 'Verified' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300' : 'bg-amber-100 text-amber-700'
@@ -405,14 +422,27 @@ export const AdminPage = () => {
                         {u.status}
                       </span>
                     </td>
-                    <td className="p-3.5 font-bold">{u.listingsCount} Items</td>
-                    <td className="p-3.5 text-slate-400">{u.joined}</td>
-                    <td className="p-3.5 text-right">
+                    <td className="p-3.5 text-slate-500">{u.phone || 'Not set'} • {u.location || 'Bhimavaram'}</td>
+                    <td className="p-3.5 text-right space-x-2">
+                      <button
+                        onClick={() => setEditingUser({ ...u })}
+                        className="px-3 py-1.5 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-700 transition inline-flex items-center gap-1"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" />
+                        Edit User
+                      </button>
                       <button
                         onClick={() => toggleVerifyUser(u.id)}
-                        className="px-3 py-1.5 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-700 transition"
+                        className="px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold hover:bg-slate-200 transition"
                       >
-                        Toggle Verify
+                        Toggle Status
+                      </button>
+                      <button
+                        onClick={() => deleteUser(u.id)}
+                        className="p-1.5 rounded-lg bg-rose-50 dark:bg-rose-950/40 text-rose-600 hover:bg-rose-100 transition"
+                        title="Remove User"
+                      >
+                        <Trash2 className="w-4 h-4" />
                       </button>
                     </td>
                   </tr>
@@ -423,40 +453,54 @@ export const AdminPage = () => {
         </div>
       )}
 
+      {/* TAB 4: BOOKINGS & ESCROW OVERRIDE (FULL EDITABILITY) */}
       {activeTab === 'bookings' && (
         <div className="glass-card p-6 rounded-3xl space-y-6 border border-slate-200/80 dark:border-slate-800">
           <h3 className="font-bold text-slate-900 dark:text-white text-lg">
-            Escrow Deposits & Active Transactions
+            Escrow Deposit Claims & Booking Edits
           </h3>
 
           <div className="space-y-4">
             {myBookings.map(bk => (
-              <div key={bk.id} className="p-4 rounded-2xl bg-slate-100 dark:bg-slate-800/60 flex flex-col md:flex-row items-center justify-between gap-4 border border-slate-200 dark:border-slate-700">
+              <div key={bk.id} className="p-5 rounded-2xl bg-slate-100 dark:bg-slate-800/60 flex flex-col md:flex-row items-center justify-between gap-4 border border-slate-200 dark:border-slate-700">
                 <div className="flex items-center gap-4">
                   <img src={bk.itemImage} alt="" className="w-16 h-16 rounded-xl object-cover" />
-                  <div>
+                  <div className="space-y-1">
                     <h4 className="font-bold text-slate-900 dark:text-white text-sm">{bk.itemTitle}</h4>
                     <p className="text-xs text-slate-500">
-                      Booking ID: {bk.id} • Lender: {bk.ownerName}
+                      ID: {bk.id} • Lender: <span className="font-semibold text-slate-700 dark:text-slate-300">{bk.ownerName}</span> • Renter: <span className="font-semibold text-slate-700 dark:text-slate-300">{bk.renterName || 'Consumer'}</span>
                     </p>
-                    <span className="inline-block mt-1 px-2.5 py-0.5 rounded-md text-[11px] font-extrabold bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300">
-                      {bk.escrowStatus}
-                    </span>
+                    <div className="flex items-center gap-2 pt-1">
+                      <span className="px-2.5 py-0.5 rounded-md text-[11px] font-extrabold bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300">
+                        {bk.status}
+                      </span>
+                      <span className="px-2.5 py-0.5 rounded-md text-[11px] font-extrabold bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300">
+                        {bk.escrowStatus}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
-                <div className="text-right flex items-center gap-4">
+                <div className="text-right flex flex-wrap items-center justify-end gap-3">
                   <div>
                     <span className="text-xs text-slate-400 block">Security Deposit</span>
                     <span className="text-lg font-extrabold text-emerald-600">₹{bk.deposit}</span>
                   </div>
 
+                  <button
+                    onClick={() => setEditingBooking({ ...bk })}
+                    className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center gap-1.5 shadow"
+                  >
+                    <Edit3 className="w-3.5 h-3.5" />
+                    Edit Booking & Escrow
+                  </button>
+
                   {bk.escrowStatus === 'Held in Escrow' && (
                     <button
                       onClick={() => releaseEscrowDeposit(bk.id)}
-                      className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow"
+                      className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow"
                     >
-                      Release Escrow Deposit
+                      Release Escrow
                     </button>
                   )}
                 </div>
@@ -466,10 +510,11 @@ export const AdminPage = () => {
         </div>
       )}
 
+      {/* TAB 5: SYSTEM SETTINGS */}
       {activeTab === 'settings' && (
         <div className="glass-card p-8 rounded-3xl space-y-6 border border-slate-200/80 dark:border-slate-800 max-w-2xl">
           <h3 className="font-bold text-slate-900 dark:text-white text-xl pb-3 border-b border-slate-100 dark:border-slate-800">
-            Platform & Governance Parameters
+            Platform Governance & Fee Settings
           </h3>
 
           <div className="space-y-4">
@@ -505,12 +550,270 @@ export const AdminPage = () => {
 
             <div className="pt-4">
               <button
-                onClick={() => toast.success('System settings saved successfully')}
+                onClick={() => toast.success('System parameters saved successfully')}
                 className="w-full py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-sm shadow-md"
               >
-                Save Settings
+                Save System Parameters
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* EDIT ITEM MODAL */}
+      {editingItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm">
+          <div className="relative w-full max-w-lg glass-card bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl border border-slate-200 dark:border-slate-800 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+              <h3 className="font-extrabold text-lg text-slate-900 dark:text-white flex items-center gap-2">
+                <Edit3 className="w-5 h-5 text-blue-500" /> Edit Product Listing
+              </h3>
+              <button onClick={() => setEditingItem(null)} className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4 text-xs">
+              <div className="space-y-1">
+                <label className="font-bold text-slate-700 dark:text-slate-300">Product Name</label>
+                <input
+                  type="text"
+                  value={editingItem.title}
+                  onChange={(e) => setEditingItem({ ...editingItem, title: e.target.value })}
+                  className="w-full px-4 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 font-medium border border-slate-200 dark:border-slate-700"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700 dark:text-slate-300">Daily Rent (₹)</label>
+                  <input
+                    type="number"
+                    value={editingItem.dailyRent}
+                    onChange={(e) => setEditingItem({ ...editingItem, dailyRent: Number(e.target.value) })}
+                    className="w-full px-4 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 font-bold border border-slate-200 dark:border-slate-700"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700 dark:text-slate-300">Safety Deposit (₹)</label>
+                  <input
+                    type="number"
+                    value={editingItem.deposit}
+                    onChange={(e) => setEditingItem({ ...editingItem, deposit: Number(e.target.value) })}
+                    className="w-full px-4 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 font-bold border border-slate-200 dark:border-slate-700"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700 dark:text-slate-300">Category</label>
+                  <select
+                    value={editingItem.category}
+                    onChange={(e) => setEditingItem({ ...editingItem, category: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 font-medium border border-slate-200 dark:border-slate-700"
+                  >
+                    {categories.filter(c => c.id !== 'all').map(c => (
+                      <option key={c.id} value={c.name}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700 dark:text-slate-300">Condition</label>
+                  <select
+                    value={editingItem.condition}
+                    onChange={(e) => setEditingItem({ ...editingItem, condition: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 font-medium border border-slate-200 dark:border-slate-700"
+                  >
+                    <option value="Like New">Like New</option>
+                    <option value="Excellent">Excellent</option>
+                    <option value="Good">Good</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-bold text-slate-700 dark:text-slate-300">Image Web URL</label>
+                <input
+                  type="url"
+                  value={editingItem.images[0] || ''}
+                  onChange={(e) => setEditingItem({ ...editingItem, images: [e.target.value] })}
+                  className="w-full px-4 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 font-medium border border-slate-200 dark:border-slate-700"
+                />
+              </div>
+            </div>
+
+            <button
+              onClick={() => {
+                updateItem(editingItem.id, editingItem);
+                setEditingItem(null);
+              }}
+              className="w-full py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs shadow-lg transition"
+            >
+              Save Product Listing Changes
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* EDIT USER MODAL */}
+      {editingUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm">
+          <div className="relative w-full max-w-lg glass-card bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl border border-slate-200 dark:border-slate-800">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+              <h3 className="font-extrabold text-lg text-slate-900 dark:text-white flex items-center gap-2">
+                <Users className="w-5 h-5 text-blue-500" /> Edit User Account
+              </h3>
+              <button onClick={() => setEditingUser(null)} className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4 text-xs">
+              <div className="space-y-1">
+                <label className="font-bold text-slate-700 dark:text-slate-300">User Full Name</label>
+                <input
+                  type="text"
+                  value={editingUser.name}
+                  onChange={(e) => setEditingUser({ ...editingUser, name: e.target.value })}
+                  className="w-full px-4 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 font-medium border border-slate-200 dark:border-slate-700"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-bold text-slate-700 dark:text-slate-300">User Email</label>
+                <input
+                  type="email"
+                  value={editingUser.email}
+                  onChange={(e) => setEditingUser({ ...editingUser, email: e.target.value })}
+                  className="w-full px-4 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 font-medium border border-slate-200 dark:border-slate-700"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700 dark:text-slate-300">Platform Role</label>
+                  <select
+                    value={editingUser.role}
+                    onChange={(e) => setEditingUser({ ...editingUser, role: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 font-bold text-blue-600 border border-slate-200 dark:border-slate-700"
+                  >
+                    <option value="Seller / Owner">Seller / Owner</option>
+                    <option value="Consumer / Buyer">Consumer / Buyer</option>
+                    <option value="Both">Both</option>
+                    <option value="Admin">Admin</option>
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700 dark:text-slate-300">Verification Status</label>
+                  <select
+                    value={editingUser.status}
+                    onChange={(e) => setEditingUser({ ...editingUser, status: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 font-bold text-emerald-600 border border-slate-200 dark:border-slate-700"
+                  >
+                    <option value="Verified">Verified</option>
+                    <option value="Pending Verification">Pending Verification</option>
+                    <option value="Suspended">Suspended</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={() => {
+                updateUser(editingUser.id, editingUser);
+                setEditingUser(null);
+              }}
+              className="w-full py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs shadow-lg transition"
+            >
+              Save User Profile Changes
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* EDIT BOOKING & ESCROW MODAL */}
+      {editingBooking && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm">
+          <div className="relative w-full max-w-lg glass-card bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl border border-slate-200 dark:border-slate-800">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+              <h3 className="font-extrabold text-lg text-slate-900 dark:text-white flex items-center gap-2">
+                <Lock className="w-5 h-5 text-emerald-500" /> Escrow Deposit & Booking Override
+              </h3>
+              <button onClick={() => setEditingBooking(null)} className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4 text-xs">
+              <div className="p-3 rounded-2xl bg-slate-100 dark:bg-slate-800 space-y-1">
+                <p className="font-bold text-slate-900 dark:text-white">{editingBooking.itemTitle}</p>
+                <p className="text-slate-500">Booking ID: {editingBooking.id}</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700 dark:text-slate-300">Booking Status</label>
+                  <select
+                    value={editingBooking.status}
+                    onChange={(e) => setEditingBooking({ ...editingBooking, status: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 font-bold border border-slate-200 dark:border-slate-700"
+                  >
+                    <option value="Confirmed">Confirmed</option>
+                    <option value="Under Inspection">Under Inspection</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Cancelled">Cancelled</option>
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700 dark:text-slate-300">Escrow Deposit (₹)</label>
+                  <input
+                    type="number"
+                    value={editingBooking.deposit}
+                    onChange={(e) => setEditingBooking({ ...editingBooking, deposit: Number(e.target.value) })}
+                    className="w-full px-4 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 font-bold text-emerald-600 border border-slate-200 dark:border-slate-700"
+                  />
+                </div>
+              </div>
+
+              {/* Escrow Quick Actions */}
+              <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+                <label className="font-bold text-slate-700 dark:text-slate-300 block">Quick Escrow Actions:</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      releaseEscrowDeposit(editingBooking.id);
+                      setEditingBooking(null);
+                    }}
+                    className="py-2.5 px-3 rounded-xl bg-emerald-600 text-white font-bold text-[11px] shadow hover:bg-emerald-700 transition"
+                  >
+                    Release Full Deposit
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      deductEscrowDeposit(editingBooking.id, damageDeductionInput);
+                      setEditingBooking(null);
+                    }}
+                    className="py-2.5 px-3 rounded-xl bg-rose-600 text-white font-bold text-[11px] shadow hover:bg-rose-700 transition"
+                  >
+                    Deduct ₹{damageDeductionInput} for Damages
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={() => {
+                updateBooking(editingBooking.id, editingBooking);
+                setEditingBooking(null);
+              }}
+              className="w-full py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs shadow-lg transition"
+            >
+              Save Booking Edits
+            </button>
           </div>
         </div>
       )}

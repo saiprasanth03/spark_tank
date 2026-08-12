@@ -7,14 +7,14 @@ import { MapView } from '../components/MapView';
 import { EmptyState } from '../components/EmptyState';
 import { 
   Search, 
-  SlidersHorizontal, 
   Map, 
   LayoutGrid, 
   IndianRupee, 
   MapPin, 
   ArrowUpDown,
   X,
-  Filter
+  Sparkles,
+  Navigation
 } from 'lucide-react';
 
 export const ExplorePage = () => {
@@ -24,10 +24,12 @@ export const ExplorePage = () => {
   // Filter States
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
-  const [maxPrice, setMaxPrice] = useState(5000);
-  const [maxDistance, setMaxDistance] = useState(50);
+  const [selectedCity, setSelectedCity] = useState('Bhimavaram');
+  const [maxDistanceKm, setMaxDistanceKm] = useState(25);
   const [sortBy, setSortBy] = useState('popular'); // 'popular', 'price-asc', 'price-desc', 'rating', 'distance'
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'map'
+
+  const cities = ['Bhimavaram', 'Visakhapatnam', 'Vijayawada', 'Hyderabad', 'Kakinada', 'Rajahmundry'];
 
   // Filtered & Sorted items computation
   const filteredItems = useMemo(() => {
@@ -44,20 +46,21 @@ export const ExplorePage = () => {
         const matchesCategory = item.category.toLowerCase().includes(q);
         if (!matchesTitle && !matchesDesc && !matchesCategory) return false;
       }
-      // Price check
-      if (item.dailyRent > maxPrice) return false;
-      // Distance check
-      if (item.distance > maxDistance) return false;
+      // Distance check in KM
+      const dist = item.distanceKm || item.distance || 0.8;
+      if (dist > maxDistanceKm) return false;
 
       return true;
     }).sort((a, b) => {
+      const distA = a.distanceKm || a.distance || 0.8;
+      const distB = b.distanceKm || b.distance || 0.8;
       if (sortBy === 'price-asc') return a.dailyRent - b.dailyRent;
       if (sortBy === 'price-desc') return b.dailyRent - a.dailyRent;
       if (sortBy === 'rating') return b.rating - a.rating;
-      if (sortBy === 'distance') return a.distance - b.distance;
+      if (sortBy === 'distance') return distA - distB;
       return b.reviewCount - a.reviewCount; // default popular
     });
-  }, [items, selectedCategory, searchQuery, maxPrice, maxDistance, sortBy]);
+  }, [items, selectedCategory, searchQuery, maxDistanceKm, sortBy]);
 
   const handleCategorySelect = (catId) => {
     setSelectedCategory(catId);
@@ -72,8 +75,8 @@ export const ExplorePage = () => {
   const resetFilters = () => {
     setSearchQuery('');
     setSelectedCategory('all');
-    setMaxPrice(200);
-    setMaxDistance(50);
+    setSelectedCity('Bhimavaram');
+    setMaxDistanceKm(25);
     setSortBy('popular');
     setSearchParams({});
   };
@@ -81,42 +84,65 @@ export const ExplorePage = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       
-      {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-            Explore Rental Items
+      {/* Hyperlocal Header */}
+      <div className="glass-card p-6 sm:p-8 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6 bg-gradient-to-r from-blue-900/10 via-teal-900/10 to-indigo-900/10">
+        <div className="space-y-2">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 text-xs font-bold shadow-sm">
+            <MapPin className="w-3.5 h-3.5 text-rose-500 fill-current" />
+            Hyperlocal Rental Marketplace
+          </div>
+          
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight flex flex-wrap items-center gap-2">
+            Rentals Near You in
+            <span className="text-blue-600 dark:text-blue-400 underline decoration-blue-500/30">
+              {selectedCity}
+            </span>
           </h1>
-          <p className="text-slate-500 text-sm mt-1">
-            Browse {filteredItems.length} items available for daily borrow in your community
+          <p className="text-slate-600 dark:text-slate-400 text-sm">
+            Browse {filteredItems.length} verified items available within walking distance in {selectedCity}
           </p>
         </div>
 
-        {/* View Mode Toggle Switch */}
-        <div className="flex items-center gap-2 bg-slate-200/70 dark:bg-slate-800/80 p-1.5 rounded-2xl border border-slate-300 dark:border-slate-700 self-start md:self-auto">
-          <button
-            onClick={() => setViewMode('grid')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-extrabold transition-all ${
-              viewMode === 'grid'
-                ? 'bg-blue-600 text-white shadow-md'
-                : 'text-slate-700 dark:text-slate-300 hover:text-blue-600'
-            }`}
-          >
-            <LayoutGrid className="w-4 h-4" />
-            Grid View
-          </button>
-          
-          <button
-            onClick={() => setViewMode('map')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-extrabold transition-all ${
-              viewMode === 'map'
-                ? 'bg-blue-600 text-white shadow-md'
-                : 'text-slate-700 dark:text-slate-300 hover:text-blue-600'
-            }`}
-          >
-            <Map className="w-4 h-4" />
-            Map View
-          </button>
+        {/* Location Dropdown & View Mode */}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative">
+            <Navigation className="w-4 h-4 text-blue-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <select
+              value={selectedCity}
+              onChange={(e) => setSelectedCity(e.target.value)}
+              className="pl-10 pr-8 py-2.5 rounded-2xl bg-white dark:bg-slate-800 text-xs font-bold text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 shadow-sm focus:ring-2 focus:ring-blue-500 cursor-pointer"
+            >
+              {cities.map(city => (
+                <option key={city} value={city}>📍 {city}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex items-center gap-1.5 bg-slate-200/70 dark:bg-slate-800/80 p-1.5 rounded-2xl border border-slate-300 dark:border-slate-700">
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-extrabold transition-all ${
+                viewMode === 'grid'
+                  ? 'bg-blue-600 text-white shadow-md'
+                  : 'text-slate-700 dark:text-slate-300 hover:text-blue-600'
+              }`}
+            >
+              <LayoutGrid className="w-4 h-4" />
+              Grid View
+            </button>
+            
+            <button
+              onClick={() => setViewMode('map')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-extrabold transition-all ${
+                viewMode === 'map'
+                  ? 'bg-blue-600 text-white shadow-md'
+                  : 'text-slate-700 dark:text-slate-300 hover:text-blue-600'
+              }`}
+            >
+              <Map className="w-4 h-4" />
+              Map View
+            </button>
+          </div>
         </div>
       </div>
 
@@ -131,7 +157,7 @@ export const ExplorePage = () => {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search cameras, laptops, tents, tools, guitars..."
+              placeholder="Search cameras, laptops, tents, tools, instruments..."
               className="w-full pl-12 pr-10 py-3 rounded-2xl bg-slate-100 dark:bg-slate-800 text-sm font-medium text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 border border-slate-200 dark:border-slate-700"
             />
             {searchQuery && (
@@ -155,7 +181,7 @@ export const ExplorePage = () => {
               <option value="price-asc">Price: Low to High</option>
               <option value="price-desc">Price: High to Low</option>
               <option value="rating">Top Rated First</option>
-              <option value="distance">Nearest Distance</option>
+              <option value="distance">Nearest Distance (km)</option>
             </select>
           </div>
         </div>
@@ -177,49 +203,30 @@ export const ExplorePage = () => {
           ))}
         </div>
 
-        {/* Row 3: Sliders (Price & Distance Radius) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2 border-t border-slate-100 dark:border-slate-800">
-          
-          {/* Max Price Slider */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
-              <span className="flex items-center gap-1">
-                <IndianRupee className="w-3.5 h-3.5 text-blue-500" />
-                Max Daily Rate:
-              </span>
-              <span className="text-blue-600 dark:text-blue-400 font-extrabold text-sm">₹{maxPrice}/day</span>
-            </div>
-            <input
-              type="range"
-              min="50"
-              max="5000"
-              step="50"
-              value={maxPrice}
-              onChange={(e) => setMaxPrice(Number(e.target.value))}
-              className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-600"
-            />
-          </div>
-
-          {/* Radius Distance Slider */}
-          <div className="space-y-2">
+        {/* Row 3: Radius Distance Slider in KM */}
+        <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-4">
+          <div className="space-y-1 flex-1 max-w-md">
             <div className="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
               <span className="flex items-center gap-1">
                 <MapPin className="w-3.5 h-3.5 text-emerald-500" />
-                Max Distance Radius:
+                Max Nearby Distance:
               </span>
-              <span className="text-emerald-600 dark:text-emerald-400 font-extrabold text-sm">{maxDistance} miles</span>
+              <span className="text-emerald-600 dark:text-emerald-400 font-extrabold text-sm">{maxDistanceKm} km</span>
             </div>
             <input
               type="range"
               min="1"
               max="50"
               step="1"
-              value={maxDistance}
-              onChange={(e) => setMaxDistance(Number(e.target.value))}
+              value={maxDistanceKm}
+              onChange={(e) => setMaxDistanceKm(Number(e.target.value))}
               className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-emerald-500"
             />
           </div>
 
+          <div className="text-xs text-slate-500 font-medium hidden sm:block">
+            Showing verified items near <span className="font-bold text-slate-800 dark:text-slate-200">{selectedCity}</span>
+          </div>
         </div>
 
       </div>

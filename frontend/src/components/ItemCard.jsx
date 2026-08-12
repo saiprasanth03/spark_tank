@@ -9,6 +9,9 @@ export const ItemCard = ({ item }) => {
   const { isWishlisted, toggleWishlist } = useBooking();
   const wishlisted = isWishlisted(item.id);
 
+  const distanceText = item.distanceKm ? `${item.distanceKm} km away` : `${item.distance || 0.8} km away`;
+  const locationCity = item.location?.city || 'Bhimavaram';
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 15 }}
@@ -51,14 +54,14 @@ export const ItemCard = ({ item }) => {
           </div>
 
           {/* Condition & Distance Badges */}
-          <div className="absolute bottom-3 left-3 flex items-center gap-1.5">
-            <span className="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-blue-600/90 text-white backdrop-blur-md flex items-center gap-1">
+          <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between pointer-events-none">
+            <span className="px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-blue-600/90 text-white backdrop-blur-md flex items-center gap-1">
               <CheckCircle2 className="w-3 h-3" />
               {item.condition}
             </span>
-            <span className="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-emerald-600/90 text-white backdrop-blur-md flex items-center gap-1">
+            <span className="px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-emerald-600/90 text-white backdrop-blur-md flex items-center gap-1 shadow">
               <MapPin className="w-3 h-3" />
-              {item.distance} mi
+              {distanceText}
             </span>
           </div>
         </div>
@@ -66,21 +69,17 @@ export const ItemCard = ({ item }) => {
         {/* Card Body */}
         <div className="p-4 space-y-3">
           
-          {/* Rating & Owner */}
+          {/* Location & Hyperlocal Tag */}
           <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+            <div className="flex items-center gap-1 text-slate-700 dark:text-slate-300 font-bold truncate max-w-[140px]">
+              <MapPin className="w-3.5 h-3.5 text-rose-500 flex-shrink-0" />
+              <span className="truncate">{locationCity}</span>
+            </div>
+
             <div className="flex items-center gap-1 text-amber-500 font-bold">
               <Star className="w-3.5 h-3.5 fill-current" />
               <span>{item.rating}</span>
               <span className="text-slate-400 dark:text-slate-500 font-normal">({item.reviewCount})</span>
-            </div>
-
-            <div className="flex items-center gap-1.5 font-medium text-slate-600 dark:text-slate-300">
-              <img
-                src={item.owner.avatar}
-                alt={item.owner.name}
-                className="w-4 h-4 rounded-full object-cover"
-              />
-              <span className="truncate max-w-[100px]">{item.owner.name}</span>
             </div>
           </div>
 
@@ -88,6 +87,18 @@ export const ItemCard = ({ item }) => {
           <h3 className="font-bold text-slate-900 dark:text-white text-base line-clamp-2 leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
             {item.title}
           </h3>
+
+          {/* Owner Info */}
+          <div className="flex items-center gap-2 pt-1">
+            <img
+              src={item.owner.avatar}
+              alt={item.owner.name}
+              className="w-5 h-5 rounded-full object-cover ring-1 ring-blue-500"
+            />
+            <span className="text-xs font-semibold text-slate-600 dark:text-slate-300 truncate">
+              {item.owner.name}
+            </span>
+          </div>
 
           {/* Price & Deposit */}
           <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-baseline justify-between">
@@ -99,8 +110,8 @@ export const ItemCard = ({ item }) => {
             </div>
 
             <div className="text-right">
-              <span className="text-xs text-slate-400 dark:text-slate-500 block">Deposit</span>
-              <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-0.5 justify-end">
+              <span className="text-xs text-slate-400 dark:text-slate-500 block">Safety Deposit</span>
+              <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5 justify-end">
                 <ShieldCheck className="w-3 h-3 text-emerald-500" />
                 ₹{item.deposit}
               </span>
@@ -116,7 +127,7 @@ export const ItemCard = ({ item }) => {
           to={`/item/${item.id}`}
           className="w-full py-2 px-3 text-center text-xs font-bold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition"
         >
-          Details
+          View Details
         </Link>
         <button
           onClick={() => navigate(`/book/${item.id}`)}
