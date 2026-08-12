@@ -25,7 +25,7 @@ export const ExplorePage = () => {
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
   const [selectedCity, setSelectedCity] = useState('Bhimavaram');
-  const [maxDistanceKm, setMaxDistanceKm] = useState(25);
+  const [maxDistanceKm, setMaxDistanceKm] = useState(5); // Capped strictly up to 5km max!
   const [sortBy, setSortBy] = useState('popular'); // 'popular', 'price-asc', 'price-desc', 'rating', 'distance'
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'map'
 
@@ -46,7 +46,7 @@ export const ExplorePage = () => {
         const matchesCategory = item.category.toLowerCase().includes(q);
         if (!matchesTitle && !matchesDesc && !matchesCategory) return false;
       }
-      // Distance check in KM
+      // Distance check in KM (Capped strictly at max 5 km)
       const dist = item.distanceKm || item.distance || 0.8;
       if (dist > maxDistanceKm) return false;
 
@@ -76,7 +76,7 @@ export const ExplorePage = () => {
     setSearchQuery('');
     setSelectedCategory('all');
     setSelectedCity('Bhimavaram');
-    setMaxDistanceKm(25);
+    setMaxDistanceKm(5);
     setSortBy('popular');
     setSearchParams({});
   };
@@ -89,7 +89,7 @@ export const ExplorePage = () => {
         <div className="space-y-2">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 text-xs font-bold shadow-sm">
             <MapPin className="w-3.5 h-3.5 text-rose-500 fill-current" />
-            Hyperlocal Rental Marketplace
+            Strict Hyperlocal Radius (Max 5 km)
           </div>
           
           <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight flex flex-wrap items-center gap-2">
@@ -99,7 +99,7 @@ export const ExplorePage = () => {
             </span>
           </h1>
           <p className="text-slate-600 dark:text-slate-400 text-sm">
-            Browse {filteredItems.length} verified items available within walking distance in {selectedCity}
+            Browse {filteredItems.length} verified items available within a 5 km walking/short-drive radius in {selectedCity}
           </p>
         </div>
 
@@ -203,21 +203,21 @@ export const ExplorePage = () => {
           ))}
         </div>
 
-        {/* Row 3: Radius Distance Slider in KM */}
+        {/* Row 3: Radius Distance Slider in KM (Capped to max 5km) */}
         <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-4">
           <div className="space-y-1 flex-1 max-w-md">
             <div className="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
               <span className="flex items-center gap-1">
                 <MapPin className="w-3.5 h-3.5 text-emerald-500" />
-                Max Nearby Distance:
+                Max Nearby Distance Radius:
               </span>
               <span className="text-emerald-600 dark:text-emerald-400 font-extrabold text-sm">{maxDistanceKm} km</span>
             </div>
             <input
               type="range"
-              min="1"
-              max="50"
-              step="1"
+              min="0.5"
+              max="5"
+              step="0.5"
               value={maxDistanceKm}
               onChange={(e) => setMaxDistanceKm(Number(e.target.value))}
               className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-emerald-500"
@@ -225,7 +225,7 @@ export const ExplorePage = () => {
           </div>
 
           <div className="text-xs text-slate-500 font-medium hidden sm:block">
-            Showing verified items near <span className="font-bold text-slate-800 dark:text-slate-200">{selectedCity}</span>
+            Hyperlocal radius capped strictly <span className="font-bold text-slate-800 dark:text-slate-200">up to 5.0 km max</span>
           </div>
         </div>
 
