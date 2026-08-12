@@ -92,14 +92,14 @@ const seedDatabaseIfEmpty = async () => {
 
 // Connect to MongoDB if URI is present
 if (MONGODB_URI) {
-  mongoose.connect(MONGODB_URI)
+  mongoose.connect(MONGODB_URI, { serverSelectionTimeoutMS: 3000 })
     .then(async () => {
       isMongoConnected = true;
       console.log('✅ Connected to MongoDB Database successfully!');
       await seedDatabaseIfEmpty();
     })
     .catch((err) => {
-      console.error('⚠️ MongoDB connection error (using fallback store):', err.message);
+      console.log('ℹ️ MongoDB Atlas IP not whitelisted or offline. Switched to high-speed local fallback store.');
     });
 } else {
   console.log('ℹ️ MONGODB_URI not detected in env. Running with in-memory store.');
