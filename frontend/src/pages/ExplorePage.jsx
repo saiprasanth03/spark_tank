@@ -150,7 +150,7 @@ export const ExplorePage = () => {
           </p>
         </div>
 
-        {/* Location Dropdown & GPS Permission Detector Button */}
+        {/* GPS Permission Detector Button */}
         <div className="flex flex-wrap items-center gap-3">
           <button
             onClick={handleDetectGPSLocation}
@@ -161,19 +161,6 @@ export const ExplorePage = () => {
             <Compass className={`w-4 h-4 ${isLocating ? 'animate-spin' : ''}`} />
             {isLocating ? 'Detecting...' : '📍 Use My GPS Location'}
           </button>
-
-          <div className="relative">
-            <Navigation className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-            <select
-              value={selectedCity}
-              onChange={(e) => setSelectedCity(e.target.value)}
-              className="pl-10 pr-8 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-bold text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 cursor-pointer"
-            >
-              {cities.map(city => (
-                <option key={city} value={city}>📍 {city}</option>
-              ))}
-            </select>
-          </div>
 
           <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
             <button

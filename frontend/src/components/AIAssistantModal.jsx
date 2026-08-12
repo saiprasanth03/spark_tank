@@ -50,12 +50,12 @@ export const AIAssistantModal = ({ isOpen, onClose }) => {
       if (q.includes('fee') || q.includes('deposit') || q.includes('escrow') || q.includes('how does') || q.includes('how it') || q.includes('platform') || q.includes('pay') || q.includes('trust')) {
         aiReply = "BorrowBridge Platform Policies & Safety Guarantees:\n\n1. Flat Platform Fee: Only ₹9.00 (non-refundable) per completed reservation.\n2. Security Deposit: A temporary refundable deposit is authorized at booking and held safely in platform escrow.\n3. Automatic Refund: Once the item is inspected and returned in original condition, your deposit is 100% refunded back to your bank account immediately!";
         recommendedItems = [];
-      } else if (q.includes('camera') || q.includes('photo') || q.includes('video') || q.includes('lens') || q.includes('gopro') || q.includes('wildlife')) {
-        aiReply = "Here are top-rated cameras and photography gear available for direct pickup in Bhimavaram:";
-        recommendedItems = sampleItems.filter(i => i.category === 'Cameras');
-      } else if (q.includes('laptop') || q.includes('macbook') || q.includes('code') || q.includes('work') || q.includes('asus')) {
+      } else if (q.includes('laptop') || q.includes('macbook') || q.includes('program') || q.includes('code') || q.includes('edit') || q.includes('work') || q.includes('asus') || q.includes('apple')) {
         aiReply = "Here are high-performance laptops available for rent nearby:";
         recommendedItems = sampleItems.filter(i => i.category === 'Laptops');
+      } else if (q.includes('camera') || q.includes('photo') || q.includes('dslr') || q.includes('lens') || q.includes('gopro') || q.includes('wildlife')) {
+        aiReply = "Here are top-rated cameras and photography gear available for direct pickup in Bhimavaram:";
+        recommendedItems = sampleItems.filter(i => i.category === 'Cameras');
       } else if (q.includes('projector') || q.includes('movie') || q.includes('screen') || q.includes('tv')) {
         aiReply = "Here are smart 4K home theater projectors with portable screens:";
         recommendedItems = sampleItems.filter(i => i.category === 'Projectors');
