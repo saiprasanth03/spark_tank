@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useBooking } from '../context/BookingContext';
 import { useAuth } from '../context/AuthContext';
+import { isAdminEmail } from '../data/adminEmails';
 import { MapView } from '../components/MapView';
 import { 
   Star, 
@@ -23,20 +24,25 @@ import {
   Maximize2,
   Send,
   Sparkles,
-  ThumbsUp
+  ThumbsUp,
+  Trash2
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export const ItemDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { items, isWishlisted, toggleWishlist, getProductReviews, addProductReview } = useBooking();
+  const { items, isWishlisted, toggleWishlist, getProductReviews, addProductReview, deleteItem } = useBooking();
   const { user, isAuthenticated } = useAuth();
 
   const item = items.find(i => i.id === id) || items[0];
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [slideshowOpen, setSlideshowOpen] = useState(false);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+
+  const isAdmin = user && isAdminEmail(user.email);
+  const isOwner = user && (user.email === item?.owner?.email || user.name === item?.owner?.name);
+  const canDelete = isAdmin || isOwner;
 
   // Product Feedback Form State
   const [feedbackRating, setFeedbackRating] = useState(5);
@@ -460,6 +466,24 @@ export const ItemDetailPage = () => {
                 Direct pickup & working inspection in Bhimavaram
               </p>
             </div>
+
+            {/* ADMIN / OWNER REMOVE LISTING BUTTON */}
+            {canDelete && (
+              <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+                <button
+                  onClick={() => {
+                    if (window.confirm(`Are you sure you want to permanently remove "${item.title}" from the marketplace?`)) {
+                      deleteItem(item.id);
+                      navigate('/explore');
+                    }
+                  }}
+                  className="w-full py-2.5 rounded-xl bg-rose-50 hover:bg-rose-600 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 hover:text-white font-extrabold text-xs transition border border-rose-200 dark:border-rose-900/50 flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span>Remove Listing ({isAdmin ? 'Admin Moderation' : 'Owner Action'})</span>
+                </button>
+              </div>
+            )}
 
           </div>
         </div>

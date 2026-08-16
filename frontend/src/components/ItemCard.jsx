@@ -1,16 +1,31 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Star, MapPin, ShieldCheck, Heart, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Star, MapPin, ShieldCheck, Heart, ArrowRight, CheckCircle2, Trash2 } from 'lucide-react';
 import { useBooking } from '../context/BookingContext';
+import { useAuth } from '../context/AuthContext';
+import { isAdminEmail } from '../data/adminEmails';
 
 export const ItemCard = ({ item }) => {
   const navigate = useNavigate();
-  const { isWishlisted, toggleWishlist } = useBooking();
+  const { isWishlisted, toggleWishlist, deleteItem } = useBooking();
+  const { user } = useAuth();
   const wishlisted = isWishlisted(item.id);
+
+  const isAdmin = user && isAdminEmail(user.email);
+  const isOwner = user && (user.email === item.owner?.email || user.name === item.owner?.name);
+  const canDelete = isAdmin || isOwner;
 
   const distanceText = item.distanceKm ? `${item.distanceKm} km away` : `${item.distance || 0.8} km away`;
   const locationCity = item.location?.city || 'Bhimavaram';
+
+  const handleDelete = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (window.confirm(`Are you sure you want to permanently remove "${item.title}"?`)) {
+      deleteItem(item.id);
+    }
+  };
 
   return (
     <motion.div
@@ -39,21 +54,35 @@ export const ItemCard = ({ item }) => {
               {item.category}
             </span>
 
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                toggleWishlist(item.id);
-              }}
-              className={`pointer-events-auto p-2 rounded-full backdrop-blur-md shadow-lg transition-transform active:scale-90 ${
-                wishlisted
-                  ? 'bg-rose-500 text-white'
-                  : 'bg-white/80 dark:bg-slate-900/80 text-slate-700 dark:text-slate-200 hover:bg-white'
-              }`}
-              title={wishlisted ? 'Remove from wishlist' : 'Save to wishlist'}
-            >
-              <Heart className={`w-4 h-4 ${wishlisted ? 'fill-current' : ''}`} />
-            </button>
+            <div className="flex items-center gap-1.5">
+              {/* Admin / Owner Quick Remove Button */}
+              {canDelete && (
+                <button
+                  onClick={handleDelete}
+                  className="pointer-events-auto p-2 rounded-full bg-rose-600/90 text-white hover:bg-rose-700 backdrop-blur-md shadow-lg transition-transform active:scale-90 cursor-pointer"
+                  title="Remove Listing (Admin/Owner Action)"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              )}
+
+              {/* Wishlist Button */}
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  toggleWishlist(item.id);
+                }}
+                className={`pointer-events-auto p-2 rounded-full backdrop-blur-md shadow-lg transition-transform active:scale-90 cursor-pointer ${
+                  wishlisted
+                    ? 'bg-rose-500 text-white'
+                    : 'bg-white/80 dark:bg-slate-900/80 text-slate-700 dark:text-slate-200 hover:bg-white'
+                }`}
+                title={wishlisted ? 'Remove from wishlist' : 'Save to wishlist'}
+              >
+                <Heart className={`w-4 h-4 ${wishlisted ? 'fill-current' : ''}`} />
+              </button>
+            </div>
           </div>
 
           {/* Condition & Distance Overlay Badges */}

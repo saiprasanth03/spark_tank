@@ -38,6 +38,8 @@ export const AdminPage = () => {
     allUsers, 
     updateItem, 
     deleteItem, 
+    clearTestListings,
+    resetAllToDefault,
     updateUser, 
     deleteUser, 
     toggleVerifyUser, 
@@ -49,6 +51,7 @@ export const AdminPage = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [sourceFilter, setSourceFilter] = useState('all'); // 'all', 'custom', 'base'
 
   const [commissionRate, setCommissionRate] = useState(10);
   const [escrowHoldDays, setEscrowHoldDays] = useState(3);
@@ -92,10 +95,16 @@ export const AdminPage = () => {
 
   // Derived stats
   const totalListings = items.length;
+  const userAddedItems = items.filter(i => i.id.startsWith('item-17'));
+  const userAddedCount = userAddedItems.length;
+  const baseCatalogCount = items.length - userAddedCount;
+
   const totalVolume = items.reduce((acc, curr) => acc + (curr.dailyRent * 5), 0) + 12400;
   const totalDepositsHeld = myBookings.filter(b => b.escrowStatus === 'Held in Escrow').reduce((acc, curr) => acc + curr.deposit, 0) + 8400;
 
   const filteredItems = items.filter(i => {
+    if (sourceFilter === 'custom' && !i.id.startsWith('item-17')) return false;
+    if (sourceFilter === 'base' && i.id.startsWith('item-17')) return false;
     if (categoryFilter !== 'all' && i.category.toLowerCase() !== categoryFilter.toLowerCase()) return false;
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
@@ -311,22 +320,25 @@ export const AdminPage = () => {
         </div>
       )}
 
-      {/* TAB 2: LISTINGS CONTROL (FULL EDITABILITY) */}
+      {/* TAB 2: LISTINGS CONTROL (FULL EDITABILITY & FAKE LISTINGS REMOVAL) */}
       {activeTab === 'listings' && (
         <div className="glass-card p-6 rounded-3xl space-y-6 border border-slate-200/80 dark:border-slate-800">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="relative w-full sm:w-80">
+          
+          {/* Top Row: Search, Category & Source Filters */}
+          <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
+            <div className="relative flex-1 max-w-md">
               <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search items or lenders..."
-                className="w-full pl-10 pr-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700"
+                placeholder="Search items, titles, or lenders..."
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700"
               />
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              {/* Category Filter */}
               <select
                 value={categoryFilter}
                 onChange={(e) => setCategoryFilter(e.target.value)}
@@ -336,6 +348,64 @@ export const AdminPage = () => {
                   <option key={c.id} value={c.id === 'all' ? 'all' : c.name}>{c.name}</option>
                 ))}
               </select>
+
+              {/* Source Filter (All / Added Products / Base) */}
+              <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold">
+                <button
+                  onClick={() => setSourceFilter('all')}
+                  className={`px-3 py-1 rounded-lg transition ${sourceFilter === 'all' ? 'bg-white dark:bg-slate-900 text-blue-600 shadow-sm' : 'text-slate-500'}`}
+                >
+                  All ({items.length})
+                </button>
+                <button
+                  onClick={() => setSourceFilter('custom')}
+                  className={`px-3 py-1 rounded-lg transition ${sourceFilter === 'custom' ? 'bg-white dark:bg-slate-900 text-amber-600 shadow-sm' : 'text-slate-500'}`}
+                >
+                  User-Added ({userAddedCount})
+                </button>
+                <button
+                  onClick={() => setSourceFilter('base')}
+                  className={`px-3 py-1 rounded-lg transition ${sourceFilter === 'base' ? 'bg-white dark:bg-slate-900 text-blue-600 shadow-sm' : 'text-slate-500'}`}
+                >
+                  Base Catalog ({baseCatalogCount})
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Admin Cleanup Action Bar */}
+          <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2 text-xs font-bold text-amber-800 dark:text-amber-300">
+              <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0" />
+              <span>Fake / Test Listing Moderation Actions:</span>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              {userAddedCount > 0 && (
+                <button
+                  onClick={() => {
+                    if (window.confirm(`Are you sure you want to remove all ${userAddedCount} user-added / test listings?`)) {
+                      clearTestListings();
+                    }
+                  }}
+                  className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs shadow-md transition flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  Remove All {userAddedCount} Added/Test Listings
+                </button>
+              )}
+
+              <button
+                onClick={() => {
+                  if (window.confirm('Reset marketplace to base catalog? This will remove all temporary listings.')) {
+                    resetAllToDefault();
+                  }
+                }}
+                className="px-3.5 py-2 rounded-xl bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 font-bold text-xs transition flex items-center gap-1.5 cursor-pointer"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                Reset Base Catalog
+              </button>
             </div>
           </div>
 
@@ -344,46 +414,65 @@ export const AdminPage = () => {
               <thead className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold uppercase tracking-wider">
                 <tr>
                   <th className="p-3.5 rounded-l-xl">Item</th>
+                  <th className="p-3.5">Type</th>
                   <th className="p-3.5">Category</th>
                   <th className="p-3.5">Lender</th>
                   <th className="p-3.5">Daily Rent</th>
                   <th className="p-3.5">Deposit</th>
-                  <th className="p-3.5">Condition</th>
                   <th className="p-3.5 rounded-r-xl text-right">Admin Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-800 dark:text-slate-200 font-medium">
-                {filteredItems.map(item => (
-                  <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
-                    <td className="p-3.5 flex items-center gap-3">
-                      <img src={item.images[0]} alt="" className="w-10 h-10 rounded-lg object-cover" />
-                      <span className="font-bold max-w-[200px] truncate">{item.title}</span>
-                    </td>
-                    <td className="p-3.5 font-semibold text-blue-600 dark:text-blue-400">{item.category}</td>
-                    <td className="p-3.5">{item.owner.name}</td>
-                    <td className="p-3.5 font-bold">₹{item.dailyRent}/day</td>
-                    <td className="p-3.5 font-bold text-emerald-600">₹{item.deposit}</td>
-                    <td className="p-3.5">{item.condition}</td>
-                    <td className="p-3.5 text-right space-x-2">
-                      <button
-                        onClick={() => setEditingItem({ ...item })}
-                        className="px-3 py-1.5 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-700 transition inline-flex items-center gap-1"
-                        title="Edit Item Details"
-                      >
-                        <Edit3 className="w-3.5 h-3.5" />
-                        Edit Item
-                      </button>
+                {filteredItems.map(item => {
+                  const isUserAdded = item.id.startsWith('item-17');
 
-                      <button
-                        onClick={() => deleteItem(item.id)}
-                        className="p-2 rounded-lg bg-rose-50 dark:bg-rose-950/40 text-rose-600 hover:bg-rose-100 transition inline-block"
-                        title="Delete Listing"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                  return (
+                    <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
+                      <td className="p-3.5 flex items-center gap-3">
+                        <img src={item.images[0]} alt="" className="w-10 h-10 rounded-lg object-cover" />
+                        <span className="font-bold max-w-[180px] truncate">{item.title}</span>
+                      </td>
+                      <td className="p-3.5">
+                        {isUserAdded ? (
+                          <span className="px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 font-extrabold text-[10px]">
+                            User Added
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 font-bold text-[10px]">
+                            Catalog
+                          </span>
+                        )}
+                      </td>
+                      <td className="p-3.5 font-semibold text-blue-600 dark:text-blue-400">{item.category}</td>
+                      <td className="p-3.5 truncate max-w-[120px]">{item.owner.name}</td>
+                      <td className="p-3.5 font-bold">₹{item.dailyRent}/day</td>
+                      <td className="p-3.5 font-bold text-emerald-600">₹{item.deposit}</td>
+                      <td className="p-3.5 text-right space-x-2">
+                        <button
+                          onClick={() => setEditingItem({ ...item })}
+                          className="px-3 py-1.5 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-700 transition inline-flex items-center gap-1 cursor-pointer"
+                          title="Edit Item Details"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                          Edit
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            if (window.confirm(`Permanently remove "${item.title}"?`)) {
+                              deleteItem(item.id);
+                            }
+                          }}
+                          className="px-3 py-1.5 rounded-lg bg-rose-50 dark:bg-rose-950/40 text-rose-600 hover:bg-rose-600 hover:text-white font-bold transition inline-flex items-center gap-1 cursor-pointer"
+                          title="Remove / Delete Listing"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          Remove
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

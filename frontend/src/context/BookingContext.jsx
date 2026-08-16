@@ -579,9 +579,46 @@ export const BookingProvider = ({ children }) => {
   };
 
   const deleteItem = (itemId) => {
-    setItems(prev => prev.filter(i => i.id !== itemId));
-    setMyListings(prev => prev.filter(i => i.id !== itemId));
-    toast.success('Listing removed by Admin');
+    setItems(prev => {
+      const updated = prev.filter(i => i.id !== itemId);
+      try {
+        localStorage.setItem(STORAGE_KEYS.ITEMS, JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+    setMyListings(prev => {
+      const updated = prev.filter(i => i.id !== itemId);
+      try {
+        localStorage.setItem(STORAGE_KEYS.MY_LISTINGS, JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+    toast.success('Listing permanently removed by Admin!');
+  };
+
+  const clearTestListings = () => {
+    setItems(prev => {
+      const updated = prev.filter(i => !i.id.startsWith('item-17'));
+      try {
+        localStorage.setItem(STORAGE_KEYS.ITEMS, JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+    setMyListings([]);
+    try {
+      localStorage.setItem(STORAGE_KEYS.MY_LISTINGS, JSON.stringify([]));
+    } catch (e) {}
+    toast.success('All fake/test added listings removed successfully!');
+  };
+
+  const resetAllToDefault = () => {
+    setItems(sampleItems);
+    setMyListings([]);
+    try {
+      localStorage.setItem(STORAGE_KEYS.ITEMS, JSON.stringify(sampleItems));
+      localStorage.setItem(STORAGE_KEYS.MY_LISTINGS, JSON.stringify([]));
+    } catch (e) {}
+    toast.success('Reset marketplace to original catalog!');
   };
 
   const updateUser = (userId, updatedFields) => {
@@ -636,6 +673,8 @@ export const BookingProvider = ({ children }) => {
       addListing,
       updateItem,
       deleteItem,
+      clearTestListings,
+      resetAllToDefault,
       updateUser,
       deleteUser,
       toggleVerifyUser,
