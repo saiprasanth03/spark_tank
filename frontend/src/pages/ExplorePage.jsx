@@ -30,7 +30,7 @@ export const ExplorePage = () => {
   const [selectedCity, setSelectedCity] = useState('Bhimavaram');
   const [userCoords, setUserCoords] = useState([16.5449, 81.5212]);
   const [maxDistanceKm, setMaxDistanceKm] = useState(5); // Capped strictly up to 5km max!
-  const [sortBy, setSortBy] = useState('popular');
+  const [sortBy, setSortBy] = useState('latest');
   const [viewMode, setViewMode] = useState('grid');
   const [isLocating, setIsLocating] = useState(false);
 
@@ -99,13 +99,25 @@ export const ExplorePage = () => {
 
       return true;
     }).sort((a, b) => {
+      if (sortBy === 'latest') {
+        const isCustomA = a.id.startsWith('item-17') ? 1 : 0;
+        const isCustomB = b.id.startsWith('item-17') ? 1 : 0;
+        if (isCustomA !== isCustomB) return isCustomB - isCustomA;
+        return 0;
+      }
+      if (sortBy === 'popular') {
+        const isCustomA = a.id.startsWith('item-17') ? 1 : 0;
+        const isCustomB = b.id.startsWith('item-17') ? 1 : 0;
+        if (isCustomA !== isCustomB) return isCustomB - isCustomA;
+        return b.reviewCount - a.reviewCount;
+      }
       const distA = a.distanceKm || a.distance || 0.8;
       const distB = b.distanceKm || b.distance || 0.8;
       if (sortBy === 'price-asc') return a.dailyRent - b.dailyRent;
       if (sortBy === 'price-desc') return b.dailyRent - a.dailyRent;
       if (sortBy === 'rating') return b.rating - a.rating;
       if (sortBy === 'distance') return distA - distB;
-      return b.reviewCount - a.reviewCount;
+      return 0;
     });
   }, [items, selectedCategory, searchQuery, maxDistanceKm, sortBy]);
 
@@ -223,7 +235,8 @@ export const ExplorePage = () => {
               onChange={(e) => setSortBy(e.target.value)}
               className="w-full pl-11 pr-8 py-3 rounded-2xl bg-slate-100 dark:bg-slate-800 text-xs font-bold text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 cursor-pointer appearance-none"
             >
-              <option value="popular">Sort: Most Popular</option>
+              <option value="latest">Sort: 🆕 Newly Added (Latest First)</option>
+              <option value="popular">Most Popular</option>
               <option value="price-asc">Price: Low to High</option>
               <option value="price-desc">Price: High to Low</option>
               <option value="rating">Top Rated First</option>
