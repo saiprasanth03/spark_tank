@@ -1,8 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ShieldCheck, Heart, Mail, Github, Twitter, Instagram, Linkedin, ArrowRight } from 'lucide-react';
+import { ShieldCheck, Heart, Mail, Github, Twitter, Instagram, Linkedin, ArrowRight, MessageSquare } from 'lucide-react';
 
-export const Footer = () => {
+export const Footer = ({ onOpenFeedback }) => {
   return (
     <footer className="bg-slate-900 text-slate-300 pt-16 pb-12 border-t border-slate-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -21,14 +21,23 @@ export const Footer = () => {
             
             <p className="text-slate-400 text-sm max-w-sm leading-relaxed">
               "Own Less. Access More."
-              BorrowBridge is the premier hyperlocal rental marketplace connecting neighbors to share cameras, laptops, tools, camping gear, instruments, and more securely.
+              BorrowBridge is the premier hyperlocal rental marketplace connecting neighbors to share cameras, laptops, tools, camping gear, instruments, and books securely.
             </p>
 
-            <div className="flex items-center gap-3 pt-2">
+            <div className="flex flex-wrap items-center gap-3 pt-2">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-semibold border border-emerald-500/20">
                 <ShieldCheck className="w-4 h-4" />
-                ₹1,00,000 Renter Deposit Protection
+                Escrow Deposit Protection
               </span>
+
+              {/* Website Feedback Button in Footer */}
+              <button
+                onClick={onOpenFeedback}
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 text-xs font-semibold border border-blue-500/20 transition cursor-pointer"
+              >
+                <MessageSquare className="w-3.5 h-3.5" />
+                Share Platform Feedback
+              </button>
             </div>
           </div>
 
@@ -38,9 +47,9 @@ export const Footer = () => {
             <ul className="space-y-2 text-sm text-slate-400">
               <li><Link to="/explore?category=Cameras" className="hover:text-blue-400 transition">Cameras & Optics</Link></li>
               <li><Link to="/explore?category=Laptops" className="hover:text-blue-400 transition">Laptops & Tech</Link></li>
+              <li><Link to="/explore?category=Books" className="hover:text-blue-400 transition">Books & Academic</Link></li>
               <li><Link to="/explore?category=Camping" className="hover:text-blue-400 transition">Camping & Outdoors</Link></li>
               <li><Link to="/explore?category=Tools" className="hover:text-blue-400 transition">Power Tools & DIY</Link></li>
-              <li><Link to="/explore?category=Music" className="hover:text-blue-400 transition">Musical Instruments</Link></li>
             </ul>
           </div>
 
@@ -51,12 +60,12 @@ export const Footer = () => {
               <li><Link to="/list-item" className="hover:text-blue-400 transition">List an Item</Link></li>
               <li><Link to="/explore" className="hover:text-blue-400 transition">Interactive Map</Link></li>
               <li><Link to="/profile" className="hover:text-blue-400 transition">User Dashboard</Link></li>
-              <li><a href="#how-it-works" className="hover:text-blue-400 transition">How It Works</a></li>
+              <li><button onClick={onOpenFeedback} className="hover:text-blue-400 transition text-left cursor-pointer">Give Website Feedback</button></li>
               <li><a href="#testimonials" className="hover:text-blue-400 transition">Trust & Reviews</a></li>
             </ul>
           </div>
 
-          {/* Column 4: Newsletter */}
+          {/* Column 4: Stay Connected */}
           <div className="space-y-3">
             <h4 className="text-white font-bold text-sm uppercase tracking-wider">Stay Connected</h4>
             <p className="text-xs text-slate-400 leading-relaxed">
@@ -71,7 +80,7 @@ export const Footer = () => {
               />
               <button
                 type="submit"
-                className="p-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold transition shadow-md shadow-blue-600/30"
+                className="p-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold transition shadow-md shadow-blue-600/30 cursor-pointer"
               >
                 <ArrowRight className="w-4 h-4" />
               </button>
@@ -90,12 +99,12 @@ export const Footer = () => {
 
         {/* Bottom copyright & legal links */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-          <p>© 2026 BorrowBridge Inc. Built for Startup Hackathon. All rights reserved.</p>
+          <p>© 2026 BorrowBridge Inc. Hyperlocal P2P Rental Platform in Bhimavaram, AP.</p>
           <div className="flex items-center gap-6">
+            <button onClick={onOpenFeedback} className="hover:text-slate-400 transition cursor-pointer">Platform Feedback</button>
             <a href="#" className="hover:text-slate-400 transition">Privacy Policy</a>
             <a href="#" className="hover:text-slate-400 transition">Terms of Service</a>
-            <a href="#" className="hover:text-slate-400 transition">Trust & Safety</a>
-            <a href="#" className="hover:text-slate-400 transition">Contact Us</a>
+            <a href="#" className="hover:text-slate-400 transition">Escrow Security</a>
           </div>
         </div>
       </div>

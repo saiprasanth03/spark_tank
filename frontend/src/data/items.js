@@ -373,5 +373,113 @@ export const sampleItems = [
       lat: 16.5430,
       lng: 81.5225
     }
+  },
+  {
+    id: 'item-11',
+    title: 'GATE & Engineering Core Exam Preparation Master Set (10 Volumes)',
+    category: 'Books',
+    description: 'Complete verified set for Engineering & GATE / PSU preparation. Includes comprehensive Theory Books, Solved Previous 20-Year Papers, Formula Handbooks, and Practice Question Banks in pristine condition.',
+    features: ['10 Comprehensive Volumes', 'Solved Previous 20 Years Papers', 'Concise Formula Pocket Guide', 'Latest 2026 Edition'],
+    dailyRent: 40,
+    threeDayRent: 35,
+    sevenDayRent: 30,
+    marketValue: 4500,
+    deposit: 400,
+    distanceKm: 0.6,
+    rating: 4.96,
+    reviewCount: 34,
+    availability: 'Available Now',
+    condition: 'Like New',
+    images: [
+      'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=1200&q=80',
+      'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=1200&q=80'
+    ],
+    owner: {
+      name: 'Venkatesh Rao',
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=250&q=80',
+      rating: 4.95,
+      responseRate: '100%',
+      verified: true,
+      phone: '+91 98765 43218',
+      location: 'SRKR College Road, Bhimavaram'
+    },
+    location: {
+      city: 'Bhimavaram',
+      address: 'SRKR College Road, Bhimavaram, AP',
+      lat: 16.5445,
+      lng: 81.5218
+    }
+  },
+  {
+    id: 'item-12',
+    title: 'O\'Reilly & Pearson Tech Library: System Design & AI Engineering',
+    category: 'Books',
+    description: 'Premier hardcover collection including Designing Data-Intensive Applications, Clean Code, Deep Learning by Ian Goodfellow, and High Performance Browser Networking.',
+    features: ['Hardcover Collector Editions', 'No Markings or Tears', 'Bookmark Kit Included', 'Latest Revisions'],
+    dailyRent: 55,
+    threeDayRent: 50,
+    sevenDayRent: 42,
+    marketValue: 8000,
+    deposit: 600,
+    distanceKm: 1.0,
+    rating: 4.98,
+    reviewCount: 22,
+    availability: 'Available Now',
+    condition: 'Like New',
+    images: [
+      'https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=1200&q=80',
+      'https://images.unsplash.com/photo-1532012164546-f432f2e3777a?auto=format&fit=crop&w=1200&q=80'
+    ],
+    owner: {
+      name: 'Pooja Sharma',
+      avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=250&q=80',
+      rating: 4.97,
+      responseRate: '99%',
+      verified: true,
+      phone: '+91 98765 43219',
+      location: 'DNR College Road, Bhimavaram'
+    },
+    location: {
+      city: 'Bhimavaram',
+      address: 'DNR College Road, Bhimavaram, AP',
+      lat: 16.5415,
+      lng: 81.5235
+    }
+  },
+  {
+    id: 'item-13',
+    title: 'Bestseller Fiction & Productivity Bundle (12 Hardcovers)',
+    category: 'Books',
+    description: 'A curated collection of top personal growth and best-selling fiction titles: Atomic Habits, Psychology of Money, Thinking Fast & Slow, Dune, and Project Hail Mary.',
+    features: ['12 Top-Rated Titles', 'Hardcover Editions', 'Read-at-your-own-pace', 'Sanitized & Clean'],
+    dailyRent: 35,
+    threeDayRent: 30,
+    sevenDayRent: 25,
+    marketValue: 5000,
+    deposit: 350,
+    distanceKm: 1.2,
+    rating: 4.91,
+    reviewCount: 28,
+    availability: 'Available Now',
+    condition: 'Excellent',
+    images: [
+      'https://images.unsplash.com/photo-1495446815901-a7297e633e8d?auto=format&fit=crop&w=1200&q=80',
+      'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=1200&q=80'
+    ],
+    owner: {
+      name: 'Kiran Varma',
+      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=250&q=80',
+      rating: 4.90,
+      responseRate: '97%',
+      verified: true,
+      phone: '+91 98765 43220',
+      location: 'J P Road, Bhimavaram'
+    },
+    location: {
+      city: 'Bhimavaram',
+      address: 'J P Road, Bhimavaram, AP',
+      lat: 16.5402,
+      lng: 81.5231
+    }
   }
 ];

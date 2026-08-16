@@ -1,13 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
+import { useBooking } from '../context/BookingContext';
 import { 
   Search, 
   MapPin, 
   ShieldCheck, 
   UserCheck, 
-  Bot, 
   FileText, 
   Star, 
   PlusCircle, 
@@ -16,21 +16,36 @@ import {
   CheckCircle2, 
   Clock, 
   TrendingUp, 
-  RefreshCw,
-  Zap,
-  Lock,
-  ChevronRight,
-  Shield,
-  FileCode,
-  Award
+  Zap, 
+  Lock, 
+  ChevronRight, 
+  Shield, 
+  FileCode, 
+  Award, 
+  BookOpen, 
+  Camera, 
+  Laptop, 
+  Navigation 
 } from 'lucide-react';
-import { categories, sampleItems } from '../data/items';
+import { categories } from '../data/items';
 import { CategoryCard } from '../components/CategoryCard';
 import { ItemCard } from '../components/ItemCard';
 
-export const LandingPage = ({ onOpenAI }) => {
+export const LandingPage = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
+  const { items } = useBooking();
+  
+  // Spotlight item switcher for the hero right-side interactive visual
+  const [selectedSpotlightIndex, setSelectedSpotlightIndex] = useState(0);
+  const spotlightItems = [
+    items[0], // Latest or Canon
+    items[1], // MacBook or gear
+    items[3], // Drone or tools
+    items.find(i => i.category === 'Books') || items[2]
+  ].filter(Boolean);
+
+  const activeSpotlight = spotlightItems[selectedSpotlightIndex] || items[0];
 
   const handleGetStartedClick = () => {
     if (isAuthenticated) {
@@ -47,7 +62,7 @@ export const LandingPage = ({ onOpenAI }) => {
       icon: MapPin,
       color: 'from-blue-500 to-indigo-600',
       title: 'Hyperlocal Bhimavaram Search',
-      description: 'Discover cameras, laptops, tools, and gear available within walking distance in Bhimavaram neighborhoods.'
+      description: 'Discover cameras, laptops, books, tools, and gear available within walking distance in Bhimavaram neighborhoods.'
     },
     {
       icon: ShieldCheck,
@@ -62,10 +77,10 @@ export const LandingPage = ({ onOpenAI }) => {
       description: 'Government ID verification and strict institutional credentials ensure 100% community trust.'
     },
     {
-      icon: Bot,
+      icon: Clock,
       color: 'from-amber-500 to-orange-600',
-      title: 'AI Gear Recommendation Engine',
-      description: 'Need specific gear for a shoot or trip? BorrowBot matches you with the ideal equipment setup instantly.'
+      title: 'Fast 30-Min Neighborhood Pickup',
+      description: 'Collect your booked gear directly from verified student & local lenders near college campuses and town centers.'
     },
     {
       icon: FileText,
@@ -116,7 +131,7 @@ export const LandingPage = ({ onOpenAI }) => {
               </h1>
 
               <p className="text-lg sm:text-xl text-slate-600 dark:text-slate-300 max-w-2xl mx-auto lg:mx-0 font-normal leading-relaxed">
-                Borrow high-end cameras, laptops, power tools, drones, instruments, and camping equipment directly from verified local owners.
+                Borrow high-end cameras, laptops, books, power tools, drones, instruments, and camping equipment directly from verified local owners.
               </p>
 
               {/* Action Buttons */}
@@ -140,70 +155,118 @@ export const LandingPage = ({ onOpenAI }) => {
                 )}
               </div>
 
+              {/* Verified Trust Badges */}
+              <div className="pt-2 flex flex-wrap items-center justify-center lg:justify-start gap-6 text-xs font-bold text-slate-600 dark:text-slate-400">
+                <span className="flex items-center gap-1.5">
+                  <ShieldCheck className="w-4 h-4 text-emerald-500" />
+                  100% Escrow Security
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-blue-500" />
+                  Verified Local Owners
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <MapPin className="w-4 h-4 text-rose-500" />
+                  Max 5km Distance
+                </span>
+              </div>
+
             </div>
 
-            {/* Right Hero Showcase Cards */}
+            {/* Right Hero Interactive Showcase (Clickable to open item details) */}
             <div className="lg:col-span-5 relative">
               <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
+                initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5 }}
+                transition={{ duration: 0.4 }}
                 className="relative z-10 space-y-4"
               >
-                {/* Featured Floating Rental Card */}
-                <div className="glass-card p-5 rounded-3xl shadow-2xl border border-white/40 dark:border-slate-700 space-y-4 transform rotate-1 hover:rotate-0 transition-transform duration-300">
-                  <div className="relative aspect-video rounded-2xl overflow-hidden">
-                    <img
-                      src={sampleItems[0].images[0]}
-                      alt="Hero Canon DSLR"
-                      className="w-full h-full object-cover"
-                    />
-                    <span className="absolute top-3 left-3 px-3 py-1 rounded-full bg-slate-900/80 text-white font-bold text-xs backdrop-blur-md">
-                      Featured Today
-                    </span>
-                    <span className="absolute bottom-3 right-3 px-3 py-1 rounded-full bg-blue-600 text-white font-extrabold text-sm backdrop-blur-md shadow">
-                      ₹450 / day
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-bold text-slate-900 dark:text-white text-base">
-                        Canon EOS R5 Mirrorless Kit
-                      </h4>
-                      <p className="text-xs text-slate-500 flex items-center gap-1">
-                        <MapPin className="w-3.5 h-3.5 text-rose-500" />
-                        0.8 km away • Bhimavaram
-                      </p>
-                    </div>
-
-                    <div className="flex items-center gap-1 text-amber-500 font-bold text-sm bg-amber-50 dark:bg-amber-950/40 px-2.5 py-1 rounded-xl">
-                      <Star className="w-4 h-4 fill-current" />
-                      4.95
-                    </div>
-                  </div>
+                
+                {/* Spotlight Switcher Pills */}
+                <div className="flex items-center justify-between gap-1.5 bg-slate-100 dark:bg-slate-800/80 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-700">
+                  {spotlightItems.map((item, idx) => (
+                    <button
+                      key={item.id}
+                      onClick={() => setSelectedSpotlightIndex(idx)}
+                      className={`flex-1 py-1.5 px-2 rounded-xl text-[11px] font-extrabold transition-all cursor-pointer truncate ${
+                        selectedSpotlightIndex === idx
+                          ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm'
+                          : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                      }`}
+                    >
+                      {item.category}
+                    </button>
+                  ))}
                 </div>
 
-                {/* Floating AI Recommendation Mini-Card */}
-                <motion.div
-                  initial={{ y: 20, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay: 0.3 }}
-                  onClick={onOpenAI}
-                  className="glass-card p-4 rounded-2xl shadow-xl border border-amber-500/30 flex items-center gap-3 cursor-pointer hover:bg-amber-50/50 dark:hover:bg-slate-800 transition"
+                {/* Main Interactive Clickable Card - Direct link to ItemDetailPage */}
+                <Link
+                  to={`/item/${activeSpotlight.id}`}
+                  className="group block glass-card p-5 rounded-3xl shadow-2xl border border-white/60 dark:border-slate-700/80 space-y-4 hover:shadow-blue-500/10 hover:border-blue-500/50 hover:scale-[1.02] transition-all duration-300 relative overflow-hidden"
+                  title="Click to view full item specifications & booking options"
                 >
-                  <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center flex-shrink-0">
-                    <Bot className="w-6 h-6 animate-pulse" />
+                  <div className="relative aspect-[16/10] rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800">
+                    <img
+                      src={activeSpotlight.images[0]}
+                      alt={activeSpotlight.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                    
+                    <span className="absolute top-3 left-3 px-3 py-1 rounded-full bg-slate-900/85 text-white font-bold text-xs backdrop-blur-md shadow flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                      Featured Gear
+                    </span>
+
+                    <span className="absolute bottom-3 right-3 px-3.5 py-1.5 rounded-full bg-blue-600 text-white font-extrabold text-sm backdrop-blur-md shadow-lg">
+                      ₹{activeSpotlight.dailyRent} / day
+                    </span>
                   </div>
-                  <div className="flex-1">
-                    <p className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1">
-                      Ask BorrowBot AI
-                      <Sparkles className="w-3 h-3 text-amber-500 fill-current" />
-                    </p>
-                    <p className="text-[11px] text-slate-500">"Suggest a projector kit near SRKR College Road"</p>
+
+                  <div className="space-y-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <h4 className="font-bold text-slate-900 dark:text-white text-base group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-1">
+                          {activeSpotlight.title}
+                        </h4>
+                        <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
+                          <MapPin className="w-3.5 h-3.5 text-rose-500 flex-shrink-0" />
+                          {activeSpotlight.distanceKm || 0.8} km away • {activeSpotlight.location?.address || 'Bhimavaram'}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-1 text-amber-500 font-bold text-xs bg-amber-50 dark:bg-amber-950/40 px-2.5 py-1 rounded-xl flex-shrink-0">
+                        <Star className="w-3.5 h-3.5 fill-current" />
+                        {activeSpotlight.rating || 4.95}
+                      </div>
+                    </div>
+
+                    {/* Click Callout Banner */}
+                    <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-extrabold text-blue-600 dark:text-blue-400 group-hover:translate-x-1 transition-transform">
+                      <span className="flex items-center gap-1.5">
+                        <Zap className="w-3.5 h-3.5 fill-current" />
+                        Click to Borrow & View Details
+                      </span>
+                      <ArrowRight className="w-4 h-4" />
+                    </div>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-slate-400" />
-                </motion.div>
+                </Link>
+
+                {/* Direct Explore Link Card */}
+                <Link
+                  to="/explore"
+                  className="glass-card p-3.5 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800 flex items-center justify-between hover:bg-slate-100/80 dark:hover:bg-slate-800/80 transition group"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center font-bold">
+                      <MapPin className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-slate-900 dark:text-white">Explore All Verified Bhimavaram Items</p>
+                      <p className="text-[11px] text-slate-400">Interactive Map • Direct Owner Pickup</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-1 transition-transform" />
+                </Link>
 
               </motion.div>
             </div>
@@ -219,7 +282,7 @@ export const LandingPage = ({ onOpenAI }) => {
             Popular Rental Categories
           </h2>
           <p className="text-slate-600 dark:text-slate-400 text-base max-w-xl mx-auto">
-            From high-end filmmaking gear to power tools and camping kits, borrow what you need when you need it.
+            From high-end filmmaking gear to books, power tools, and camping kits, borrow what you need when you need it.
           </p>
         </div>
 
@@ -252,7 +315,7 @@ export const LandingPage = ({ onOpenAI }) => {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {sampleItems.slice(0, 4).map(item => (
+          {items.slice(0, 8).map(item => (
             <ItemCard key={item.id} item={item} />
           ))}
         </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 
@@ -10,8 +10,8 @@ import { BookingProvider } from './context/BookingContext';
 // Core Components
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
-import { AIAssistantModal } from './components/AIAssistantModal';
 import { ScrollToTop } from './components/ScrollToTop';
+import { WebsiteFeedbackModal } from './components/WebsiteFeedbackModal';
 
 // Pages
 import { LandingPage } from './pages/LandingPage';
@@ -25,6 +25,7 @@ import { RegisterPage } from './pages/RegisterPage';
 import { AdminPage } from './pages/AdminPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 
+import { MessageSquare, Sparkles } from 'lucide-react';
 
 // Scroll to top on route change helper
 const ScrollToTopOnRouteChange = () => {
@@ -36,24 +37,24 @@ const ScrollToTopOnRouteChange = () => {
 };
 
 export default function App() {
-  const [isAIOpen, setIsAIOpen] = useState(false);
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
 
   return (
     <ThemeProvider>
       <AuthProvider>
         <BookingProvider>
-          <div className="min-h-screen flex flex-col justify-between selection:bg-blue-600 selection:text-white">
+          <div className="min-h-screen flex flex-col justify-between selection:bg-blue-600 selection:text-white relative">
             <ScrollToTopOnRouteChange />
-            <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
+            <Toaster position="top-right" toastOptions={{ duration: 3500 }} />
 
             <div>
-              {/* Sticky Navbar */}
-              <Navbar onOpenAI={() => setIsAIOpen(true)} />
+              {/* Sticky Navbar with Feedback trigger */}
+              <Navbar onOpenFeedback={() => setIsFeedbackModalOpen(true)} />
 
               {/* Application Routes */}
               <main>
                 <Routes>
-                  <Route path="/" element={<LandingPage onOpenAI={() => setIsAIOpen(true)} />} />
+                  <Route path="/" element={<LandingPage />} />
                   <Route path="/explore" element={<ExplorePage />} />
                   <Route path="/item/:id" element={<ItemDetailPage />} />
                   <Route path="/book/:id" element={<BookingPage />} />
@@ -67,14 +68,28 @@ export default function App() {
               </main>
             </div>
 
-            {/* AI Assistant Modal */}
-            <AIAssistantModal isOpen={isAIOpen} onClose={() => setIsAIOpen(false)} />
+            {/* FLOATING WEBSITE FEEDBACK BUTTON (Bottom Right, next to ScrollToTop) */}
+            <button
+              onClick={() => setIsFeedbackModalOpen(true)}
+              className="fixed bottom-6 left-6 z-40 px-4 py-2.5 rounded-full bg-slate-900/90 dark:bg-white/90 text-white dark:text-slate-900 backdrop-blur-md shadow-2xl hover:scale-105 active:scale-95 transition flex items-center gap-2 text-xs font-extrabold border border-slate-700 dark:border-slate-300 cursor-pointer group"
+              title="Give Website & Platform Feedback"
+            >
+              <MessageSquare className="w-4 h-4 text-amber-400 group-hover:rotate-12 transition-transform" />
+              <span>Feedback</span>
+              <Sparkles className="w-3 h-3 text-amber-400 fill-current" />
+            </button>
 
             {/* Floating Back to Top Button */}
             <ScrollToTop />
 
-            {/* Footer */}
-            <Footer />
+            {/* Footer with Feedback trigger */}
+            <Footer onOpenFeedback={() => setIsFeedbackModalOpen(true)} />
+
+            {/* Global Website Feedback Modal */}
+            <WebsiteFeedbackModal
+              isOpen={isFeedbackModalOpen}
+              onClose={() => setIsFeedbackModalOpen(false)}
+            />
           </div>
         </BookingProvider>
       </AuthProvider>

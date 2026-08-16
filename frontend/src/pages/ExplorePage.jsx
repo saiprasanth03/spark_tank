@@ -28,6 +28,7 @@ export const ExplorePage = () => {
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
   const [selectedCity, setSelectedCity] = useState('Bhimavaram');
+  const [userCoords, setUserCoords] = useState([16.5449, 81.5212]);
   const [maxDistanceKm, setMaxDistanceKm] = useState(5); // Capped strictly up to 5km max!
   const [sortBy, setSortBy] = useState('popular');
   const [viewMode, setViewMode] = useState('grid');
@@ -58,6 +59,7 @@ export const ExplorePage = () => {
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         const { latitude, longitude } = pos.coords;
+        setUserCoords([latitude, longitude]);
 
         try {
           const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
@@ -293,7 +295,7 @@ export const ExplorePage = () => {
         )
       ) : (
         <div className="space-y-6">
-          <MapView items={filteredItems} height="600px" />
+          <MapView items={filteredItems} height="600px" userCoords={userCoords} />
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {filteredItems.map(item => (
               <ItemCard key={item.id} item={item} />

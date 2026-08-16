@@ -15,7 +15,9 @@ import {
   Image as ImageIcon,
   ArrowLeft,
   Calculator,
-  Lock
+  Lock,
+  Compass,
+  Navigation
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -24,7 +26,7 @@ export const ListItemPage = () => {
   const { addListing } = useBooking();
   const { user } = useAuth();
 
-  // ROLE RESTRICTION CHECK (Developers & Sellers / Owners only)
+  // ROLE RESTRICTION CHECK
   const isConsumerOnly = user && user.role === 'Consumer / Buyer';
 
   // Form Fields
@@ -33,9 +35,15 @@ export const ListItemPage = () => {
   const [description, setDescription] = useState('');
   const [marketValue, setMarketValue] = useState(40000);
   const [age, setAge] = useState('1 year');
-  const [condition, setCondition] = useState('Good'); // 'Excellent', 'Good', 'Fair'
+  const [condition, setCondition] = useState('Good');
   const [accessories, setAccessories] = useState('Battery, charger, protective case');
-  const [location, setLocation] = useState('Bhimavaram, AP');
+  
+  // Location & Exact GPS Coordinates
+  const [location, setLocation] = useState('SRKR College Road, Bhimavaram, AP');
+  const [latitude, setLatitude] = useState(16.5449);
+  const [longitude, setLongitude] = useState(81.5212);
+  const [isDetectingLocation, setIsDetectingLocation] = useState(false);
+  const [gpsCaptured, setGpsCaptured] = useState(false);
 
   // Rates & Deposit
   const [dailyRent, setDailyRent] = useState(800);
@@ -67,6 +75,41 @@ export const ListItemPage = () => {
       setDeposit(suggestedDeposit);
     }
   }, [marketValue, condition, useSuggestedPrice, suggestedDailyPrice, suggestedDeposit]);
+
+  const handleDetectOwnerGPS = () => {
+    if (!navigator.geolocation) {
+      toast.error('Geolocation is not supported by your browser.');
+      return;
+    }
+    setIsDetectingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude: lat, longitude: lng } = pos.coords;
+        setLatitude(Number(lat.toFixed(6)));
+        setLongitude(Number(lng.toFixed(6)));
+        setGpsCaptured(true);
+
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+          const data = await res.json();
+          const road = data.address?.road || data.address?.suburb || 'Town Road';
+          const area = data.address?.city || data.address?.town || data.address?.village || 'Bhimavaram';
+          const detectedAddress = `${road}, ${area}, AP`;
+          setLocation(detectedAddress);
+          toast.success(`📍 Exact Location Captured: ${detectedAddress}!`);
+        } catch (e) {
+          toast.success(`📍 Exact GPS Coordinates Captured (${lat.toFixed(4)}, ${lng.toFixed(4)})!`);
+        } finally {
+          setIsDetectingLocation(false);
+        }
+      },
+      (err) => {
+        setIsDetectingLocation(false);
+        toast.error('Could not access GPS. Using default Bhimavaram coordinates.');
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
 
   if (isConsumerOnly) {
     return (
@@ -142,9 +185,14 @@ export const ListItemPage = () => {
         condition,
         features: featuresArr,
         images: [finalImage],
+        ownerName: user?.name || 'Verified Owner',
+        ownerPhone: user?.phone || '+91 98765 43210',
+        ownerEmail: user?.email || 'owner@example.com',
         location: {
           city: 'Bhimavaram',
-          address: location
+          address: location,
+          lat: Number(latitude) || 16.5449,
+          lng: Number(longitude) || 81.5212
         }
       });
 
@@ -175,7 +223,7 @@ export const ListItemPage = () => {
           List Your Item for Rent
         </h1>
         <p className="text-slate-500 text-sm max-w-2xl">
-          List your equipment for rent. Our smart pricing engine recommends optimal daily rates based on market value and condition.
+          List your equipment with exact GPS location mapping. Our smart pricing engine recommends optimal daily rates based on market value and condition.
         </p>
       </div>
 
@@ -211,7 +259,7 @@ export const ListItemPage = () => {
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full px-4 py-3 rounded-2xl bg-slate-100 dark:bg-slate-800 text-sm font-medium text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 rounded-2xl bg-slate-100 dark:bg-slate-800 text-sm font-medium text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-blue-500 cursor-pointer"
               >
                 {categories.filter(c => c.id !== 'all').map(cat => (
                   <option key={cat.id} value={cat.name}>{cat.name}</option>
@@ -221,7 +269,7 @@ export const ListItemPage = () => {
 
             <div className="space-y-2">
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                Original/Current Market Value (₹) *
+                Original Market Value (₹) *
               </label>
               <div className="relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-slate-500">₹</span>
@@ -245,7 +293,7 @@ export const ListItemPage = () => {
                 type="text"
                 value={age}
                 onChange={(e) => setAge(e.target.value)}
-                placeholder="e.g. 2 years"
+                placeholder="e.g. 1 year"
                 className="w-full px-4 py-3 rounded-2xl bg-slate-100 dark:bg-slate-800 text-sm font-medium text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -259,104 +307,90 @@ export const ListItemPage = () => {
               <select
                 value={condition}
                 onChange={(e) => setCondition(e.target.value)}
-                className="w-full px-4 py-3 rounded-2xl bg-slate-100 dark:bg-slate-800 text-sm font-medium text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 rounded-2xl bg-slate-100 dark:bg-slate-800 text-sm font-medium text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-blue-500 cursor-pointer"
               >
-                <option value="Excellent">Excellent (+10% Premium)</option>
-                <option value="Good">Good (Standard Market Rate)</option>
-                <option value="Fair">Fair (-15% Discount)</option>
+                <option value="Excellent">Excellent (Like New, 0 cosmetic marks)</option>
+                <option value="Good">Good (Minor normal wear, 100% functional)</option>
+                <option value="Fair">Fair (Noticeable wear, fully tested)</option>
               </select>
             </div>
 
             <div className="space-y-2">
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                Accessories Included
+                Included Accessories & Cables
               </label>
               <input
                 type="text"
                 value={accessories}
                 onChange={(e) => setAccessories(e.target.value)}
-                placeholder="e.g. Battery, charger, tripod, bag"
-                className="w-full px-4 py-3 rounded-2xl bg-slate-100 dark:bg-slate-800 text-sm font-medium text-slate-900 dark:text-white placeholder-slate-400 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-blue-500"
+                placeholder="e.g. 2 Batteries, 128GB SD card, bag"
+                className="w-full px-4 py-3 rounded-2xl bg-slate-100 dark:bg-slate-800 text-sm font-medium text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-blue-500"
               />
             </div>
           </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+              Detailed Description
+            </label>
+            <textarea
+              rows={3}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Describe your equipment features, performance, and rental terms..."
+              className="w-full px-4 py-3 rounded-2xl bg-slate-100 dark:bg-slate-800 text-sm font-medium text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
         </div>
 
-        {/* Section 2: Smart Pricing & Duration Rates */}
+        {/* Section 2: Smart Pricing & Deposit */}
         <div className="space-y-6">
-          <h3 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2 pb-3 border-b border-slate-100 dark:border-slate-800">
-            <Calculator className="w-5 h-5 text-emerald-500" />
-            2. Smart Data-Based Price Recommendation Engine
-          </h3>
+          <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Calculator className="w-5 h-5 text-emerald-500" />
+              2. Smart Rental Rates & Security Deposit
+            </h3>
+            <span className="text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-800">
+              Smart Algorithm
+            </span>
+          </div>
 
-          <div className="p-6 rounded-3xl bg-gradient-to-br from-blue-50 via-teal-50 to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-blue-950/40 border border-blue-200/80 dark:border-blue-800/80 space-y-4">
-            
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-blue-200/60 dark:border-slate-700 pb-3">
+          <div className="p-5 rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 space-y-3">
+            <div className="flex items-center justify-between">
               <div>
-                <span className="text-xs font-extrabold uppercase tracking-wide text-blue-600 dark:text-blue-400 flex items-center gap-1">
-                  <Sparkles className="w-4 h-4 text-amber-500 fill-current" />
-                  AI Suggested Rental Price
-                </span>
-                <h4 className="text-3xl font-extrabold text-slate-900 dark:text-white mt-1">
-                  ₹{suggestedDailyPrice} <span className="text-sm font-normal text-slate-500">/ day</span>
-                </h4>
+                <p className="text-xs font-bold text-slate-800 dark:text-slate-200">Recommended Daily Rate</p>
+                <p className="text-[11px] text-slate-500">Based on ₹{marketValue} value and {condition} condition</p>
               </div>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setUseSuggestedPrice(true);
-                  setDailyRent(suggestedDailyPrice);
-                  setDeposit(suggestedDeposit);
-                  toast.success(`Applied AI recommended price of ₹${suggestedDailyPrice}/day`);
-                }}
-                className="px-5 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs shadow-md transition flex items-center gap-1.5 self-start sm:self-auto"
-              >
-                <CheckCircle2 className="w-4 h-4" />
-                Accept ₹{suggestedDailyPrice}/day
-              </button>
-            </div>
-
-            {/* Duration Discounts Table */}
-            <div className="pt-2">
-              <span className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-2">
-                Duration Discount Rates (Encourages longer rental bookings):
-              </span>
-              <div className="grid grid-cols-3 gap-2 text-center text-xs">
-                <div className="p-2.5 rounded-xl bg-white/80 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-                  <span className="text-slate-400 block font-semibold">1 Day</span>
-                  <span className="font-extrabold text-slate-900 dark:text-white text-sm">₹{dailyRent}/day</span>
-                </div>
-                <div className="p-2.5 rounded-xl bg-white/80 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-                  <span className="text-slate-400 block font-semibold">3 Days</span>
-                  <span className="font-extrabold text-blue-600 text-sm">₹{threeDayRate}/day</span>
-                </div>
-                <div className="p-2.5 rounded-xl bg-white/80 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-                  <span className="text-slate-400 block font-semibold">7 Days (Weekly)</span>
-                  <span className="font-extrabold text-emerald-600 text-sm">₹{sevenDayRate}/day</span>
-                </div>
+              <div className="text-right">
+                <span className="text-2xl font-black text-emerald-600 dark:text-emerald-400">₹{suggestedDailyPrice}</span>
+                <span className="text-xs text-slate-500"> / day</span>
               </div>
             </div>
-
+            
+            <div className="grid grid-cols-2 gap-3 pt-2 text-xs">
+              <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-800 flex justify-between">
+                <span className="text-slate-500">3+ Days Rate:</span>
+                <span className="font-bold text-slate-900 dark:text-white">₹{threeDayRate}/day</span>
+              </div>
+              <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-800 flex justify-between">
+                <span className="text-slate-500">7+ Days Rate:</span>
+                <span className="font-bold text-slate-900 dark:text-white">₹{sevenDayRate}/day</span>
+              </div>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                Your Final Daily Rental Rate (₹ INR) *
+                Your 1-Day Rental Price (₹) *
               </label>
               <div className="relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-slate-500">₹</span>
                 <input
                   type="number"
                   required
-                  min="1"
                   value={dailyRent}
-                  onChange={(e) => {
-                    setDailyRent(Number(e.target.value));
-                    setUseSuggestedPrice(false);
-                  }}
-                  placeholder="800"
+                  onChange={(e) => setDailyRent(Number(e.target.value))}
                   className="w-full pl-8 pr-4 py-3 rounded-2xl bg-slate-100 dark:bg-slate-800 text-sm font-bold text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -364,17 +398,15 @@ export const ListItemPage = () => {
 
             <div className="space-y-2">
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                Refundable Security Deposit (₹ INR) *
+                Refundable Security Deposit (₹) *
               </label>
               <div className="relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-slate-500">₹</span>
                 <input
                   type="number"
                   required
-                  min="0"
                   value={deposit}
                   onChange={(e) => setDeposit(Number(e.target.value))}
-                  placeholder="4000"
                   className="w-full pl-8 pr-4 py-3 rounded-2xl bg-slate-100 dark:bg-slate-800 text-sm font-bold text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -382,20 +414,20 @@ export const ListItemPage = () => {
           </div>
         </div>
 
-        {/* Section 3: Photo Upload Option & Pickup Location */}
+        {/* Section 3: Photo Upload & EXACT OWNER LOCATION */}
         <div className="space-y-6">
           <h3 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2 pb-3 border-b border-slate-100 dark:border-slate-800">
-            <ImageIcon className="w-5 h-5 text-purple-500" />
-            3. Photo Upload & Pickup Location
+            <MapPin className="w-5 h-5 text-rose-500" />
+            3. Photo Upload & Exact Owner Location
           </h3>
 
+          {/* Photo Upload */}
           <div className="space-y-3">
             <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-              Upload Product Photos (File Upload or Direct URL)
+              Upload Product Photo
             </label>
             
-            {/* File Upload Dropzone */}
-            <div className="p-6 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-3xl text-center bg-slate-50/50 dark:bg-slate-800/40 hover:bg-slate-100/80 dark:hover:bg-slate-800 transition cursor-pointer relative group">
+            <div className="p-6 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-3xl text-center bg-slate-50/50 dark:bg-slate-800/40 hover:bg-slate-100/80 transition cursor-pointer relative group">
               <input
                 type="file"
                 accept="image/*"
@@ -409,49 +441,101 @@ export const ListItemPage = () => {
                 <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
                   Click to Upload Photos from your Device
                 </p>
-                <p className="text-[11px] text-slate-400">Supports PNG, JPG, WEBP up to 10MB</p>
+                <p className="text-[11px] text-slate-400">Supports PNG, JPG, WEBP</p>
               </div>
             </div>
 
-            {/* Direct Image URL Backup Input */}
-            <div className="space-y-1 pt-2">
-              <span className="text-[11px] font-semibold text-slate-400">Or paste an Image Web URL:</span>
-              <input
-                type="url"
-                value={imageUrlInput}
-                onChange={handleImageUrlChange}
-                placeholder="https://images.unsplash.com/photo-..."
-                className="w-full px-4 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 text-xs font-medium text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
+            {imagePreview && (
+              <div className="space-y-1">
+                <img
+                  src={imagePreview}
+                  alt="Product Preview"
+                  className="w-full h-48 rounded-2xl object-cover border border-slate-200 dark:border-slate-700 shadow-md"
+                />
+              </div>
+            )}
           </div>
 
-          {imagePreview && (
-            <div className="space-y-1">
-              <span className="text-xs text-slate-400 font-semibold">Image Preview:</span>
-              <img
-                src={imagePreview}
-                alt="Product Preview"
-                className="w-full h-56 rounded-2xl object-cover border border-slate-200 dark:border-slate-700 shadow-md"
-              />
-            </div>
-          )}
+          {/* Exact GPS Location Capture Card */}
+          <div className="p-6 rounded-3xl bg-blue-50/60 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h4 className="font-extrabold text-slate-900 dark:text-white text-sm flex items-center gap-2">
+                  <Navigation className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                  Owner's Exact Pickup Location & GPS
+                </h4>
+                <p className="text-xs text-slate-500">
+                  Pin your item with exact coordinates so renters nearby in Bhimavaram can find it on the map.
+                </p>
+              </div>
 
-          <div className="space-y-2">
-            <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-              Pickup City / Neighborhood Location *
-            </label>
-            <div className="relative">
-              <MapPin className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                required
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                placeholder="SRKR College Road, Bhimavaram, AP"
-                className="w-full pl-11 pr-4 py-3 rounded-2xl bg-slate-100 dark:bg-slate-800 text-sm font-medium text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-blue-500"
-              />
+              {/* GPS Auto-Detect Button */}
+              <button
+                type="button"
+                onClick={handleDetectOwnerGPS}
+                disabled={isDetectingLocation}
+                className="px-4 py-2.5 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 font-extrabold text-xs shadow-md hover:opacity-90 transition flex items-center gap-2 flex-shrink-0 cursor-pointer"
+              >
+                <Compass className={`w-4 h-4 text-emerald-400 ${isDetectingLocation ? 'animate-spin' : ''}`} />
+                {isDetectingLocation ? 'Detecting GPS...' : '📍 Auto-Detect My Exact GPS'}
+              </button>
             </div>
+
+            {gpsCaptured && (
+              <div className="p-3 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-200 text-xs font-bold flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                <span>Exact GPS Coordinates Captured: {latitude}° N, {longitude}° E (Bhimavaram Zone)</span>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                Street / Landmark Address *
+              </label>
+              <div className="relative">
+                <MapPin className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  required
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  placeholder="e.g. SRKR College Road, Bhimavaram, AP"
+                  className="w-full pl-11 pr-4 py-3 rounded-2xl bg-white dark:bg-slate-900 text-sm font-medium text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+
+            {/* Latitude & Longitude Coordinate Inputs */}
+            <div className="grid grid-cols-2 gap-3 pt-1">
+              <div className="space-y-1">
+                <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400">
+                  Latitude Coordinate
+                </label>
+                <input
+                  type="number"
+                  step="0.0001"
+                  required
+                  value={latitude}
+                  onChange={(e) => setLatitude(Number(e.target.value))}
+                  className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 text-xs font-bold text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400">
+                  Longitude Coordinate
+                </label>
+                <input
+                  type="number"
+                  step="0.0001"
+                  required
+                  value={longitude}
+                  onChange={(e) => setLongitude(Number(e.target.value))}
+                  className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 text-xs font-bold text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700"
+                />
+              </div>
+            </div>
+
           </div>
         </div>
 
@@ -459,9 +543,9 @@ export const ListItemPage = () => {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full py-4 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-base shadow-xl shadow-blue-500/30 transition hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-2"
+          className="w-full py-4 rounded-2xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-extrabold text-base shadow-xl shadow-blue-500/30 transition hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
         >
-          {isSubmitting ? 'Publishing Listing...' : 'Publish Item to BorrowBridge'}
+          {isSubmitting ? 'Publishing Listing...' : 'Publish Item with Exact GPS Location'}
         </button>
 
       </form>

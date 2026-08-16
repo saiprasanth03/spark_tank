@@ -37,12 +37,12 @@ export const sampleItems = [
       responseRate: '100%',
       verified: true,
       phone: '+91 98765 43210',
-      location: 'Downtown District'
+      location: 'SRKR College Road, Bhimavaram'
     },
     location: {
-      address: 'Market St, SF',
-      lat: 37.7879,
-      lng: -122.4075
+      address: 'SRKR College Road, Bhimavaram, AP',
+      lat: 16.5449,
+      lng: 81.5212
     }
   },
   {
@@ -53,7 +53,7 @@ export const sampleItems = [
     features: ['M3 Max CPU/GPU', '64GB Unified Memory', '1TB SSD Storage', 'MagSafe Charger'],
     dailyRent: 650,
     deposit: 4500,
-    distance: 1.2,
+    distance: 1.4,
     rating: 4.90,
     reviewCount: 24,
     availability: 'Available Now',
@@ -68,12 +68,43 @@ export const sampleItems = [
       responseRate: '98%',
       verified: true,
       phone: '+91 98765 43211',
-      location: 'Creative Hub'
+      location: 'J P Road, Bhimavaram'
     },
     location: {
-      address: '200 Folsom St',
-      lat: 37.7901,
-      lng: -122.3925
+      address: 'J P Road, Bhimavaram, AP',
+      lat: 16.5400,
+      lng: 81.5230
+    }
+  },
+  {
+    id: 'item-11',
+    title: 'GATE & Engineering Core Exam Preparation Master Set (10 Volumes)',
+    category: 'Books',
+    description: 'Complete verified set for Engineering & GATE preparation.',
+    features: ['10 Comprehensive Volumes', 'Solved Previous 20 Years Papers'],
+    dailyRent: 40,
+    deposit: 400,
+    distance: 0.6,
+    rating: 4.96,
+    reviewCount: 34,
+    availability: 'Available Now',
+    condition: 'Like New',
+    images: [
+      'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=1200&q=80'
+    ],
+    owner: {
+      name: 'Venkatesh Rao',
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=250&q=80',
+      rating: 4.95,
+      responseRate: '100%',
+      verified: true,
+      phone: '+91 98765 43218',
+      location: 'SRKR College Road, Bhimavaram'
+    },
+    location: {
+      address: 'SRKR College Road, Bhimavaram, AP',
+      lat: 16.5445,
+      lng: 81.5218
     }
   }
 ];
