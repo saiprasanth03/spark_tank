@@ -218,6 +218,30 @@ export const BookingProvider = ({ children }) => {
     ];
   });
 
+  // Real-time synchronization across browser tabs/windows
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === STORAGE_KEYS.BOOKINGS && e.newValue) {
+        try {
+          setMyBookings(JSON.parse(e.newValue));
+        } catch (err) {}
+      }
+      if (e.key === STORAGE_KEYS.ITEMS && e.newValue) {
+        try {
+          setItems(JSON.parse(e.newValue));
+        } catch (err) {}
+      }
+      if (e.key === STORAGE_KEYS.MY_LISTINGS && e.newValue) {
+        try {
+          setMyListings(JSON.parse(e.newValue));
+        } catch (err) {}
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
   // SYNC STATES TO LOCALSTORAGE
   useEffect(() => {
     try {

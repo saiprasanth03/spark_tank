@@ -122,6 +122,9 @@ export const ProfilePage = () => {
     }
   };
 
+  const pendingIncomingOwnerRequests = myBookings.filter(b => b.stage === 'REQUESTED');
+  const pendingOwnerCount = pendingIncomingOwnerRequests.length;
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       
@@ -273,18 +276,58 @@ export const ProfilePage = () => {
       {activeTab === 'bookings' && (
         <div className="space-y-6">
           
+          {/* Incoming Owner Requests Alert Banner */}
+          {pendingOwnerCount > 0 && (
+            <div className="p-5 rounded-3xl bg-amber-500/10 border-2 border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-in slide-in-from-top-2">
+              <div className="flex items-center gap-3.5">
+                <div className="p-3 rounded-2xl bg-amber-500 text-white shadow-md animate-pulse">
+                  <Zap className="w-6 h-6 fill-current" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                    {pendingOwnerCount} Incoming Rental {pendingOwnerCount === 1 ? 'Request' : 'Requests'} Received!
+                    <span className="px-2 py-0.5 rounded-full bg-amber-500 text-white text-[10px] font-black">
+                      Action Required
+                    </span>
+                  </h4>
+                  <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+                    A user has requested dates for your product. Click below to review dates and approve the rental.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setBookingRoleView('owner')}
+                className="px-5 py-2.5 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs shadow-md shadow-amber-500/25 transition flex items-center justify-center gap-2 cursor-pointer flex-shrink-0"
+              >
+                <span>Switch to Owner View & Accept</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
           {/* Sub-view Switcher: Renter vs Owner View */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700">
             <div>
-              <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">
+              <h3 className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
                 Peer-to-Peer Rental Lifecycle Hub
+                {bookingRoleView === 'owner' ? (
+                  <span className="text-xs font-bold text-emerald-600 bg-emerald-100 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full">
+                    Lender / Owner Perspective
+                  </span>
+                ) : (
+                  <span className="text-xs font-bold text-blue-600 bg-blue-100 dark:bg-blue-950/60 px-2 py-0.5 rounded-full">
+                    Borrower / Renter Perspective
+                  </span>
+                )}
               </h3>
               <p className="text-xs text-slate-500">
-                Switch perspective to manage rentals you borrowed or approve incoming booking requests as an owner.
+                {bookingRoleView === 'owner'
+                  ? 'Manage incoming booking requests from other users, log pickup inspections, and settle return deposits.'
+                  : 'Manage items you are borrowing, review owner condition inspections, pay deposit into Escrow, and initiate returns.'}
               </p>
             </div>
 
-            <div className="flex items-center gap-1.5 bg-white dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
+            <div className="flex items-center gap-1.5 bg-white dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-700 flex-shrink-0">
               <button
                 onClick={() => setBookingRoleView('renter')}
                 className={`px-4 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
@@ -297,13 +340,18 @@ export const ProfilePage = () => {
               </button>
               <button
                 onClick={() => setBookingRoleView('owner')}
-                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
                   bookingRoleView === 'owner'
                     ? 'bg-blue-600 text-white shadow-sm'
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
                 }`}
               >
-                🏷️ As Owner (Incoming Requests & Handover)
+                <span>🏷️ As Owner</span>
+                {pendingOwnerCount > 0 && (
+                  <span className="px-1.5 py-0.2 rounded-full bg-amber-500 text-white text-[10px] font-black animate-pulse">
+                    {pendingOwnerCount}
+                  </span>
+                )}
               </button>
             </div>
           </div>
@@ -446,10 +494,10 @@ export const ProfilePage = () => {
                         {!isRenterView && (
                           <>
                             {bk.stage === 'REQUESTED' && (
-                              <>
+                              <div className="flex items-center gap-2">
                                 <button
                                   onClick={() => acceptBookingRequest(bk.id)}
-                                  className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-600/20 transition cursor-pointer"
+                                  className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs flex items-center gap-1.5 shadow-lg shadow-emerald-600/30 transition cursor-pointer hover:scale-105"
                                 >
                                   <Check className="w-4 h-4" />
                                   Accept Dates & Request
@@ -460,7 +508,7 @@ export const ProfilePage = () => {
                                 >
                                   Decline
                                 </button>
-                              </>
+                              </div>
                             )}
 
                             {bk.stage === 'ACCEPTED' && (
@@ -495,18 +543,41 @@ export const ProfilePage = () => {
                         {isRenterView && (
                           <>
                             {bk.stage === 'REQUESTED' && (
-                              <button
-                                onClick={() => cancelBooking(bk.id)}
-                                className="px-4 py-2 rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400 hover:bg-rose-100 font-bold text-xs transition cursor-pointer"
-                              >
-                                Cancel Request
-                              </button>
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span className="text-xs font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 px-3 py-1.5 rounded-xl border border-amber-200">
+                                  ⏳ Request with Owner ({bk.ownerName})
+                                </span>
+                                <button
+                                  onClick={() => setBookingRoleView('owner')}
+                                  className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs shadow transition flex items-center gap-1 cursor-pointer"
+                                  title="Switch to Owner view to approve this request"
+                                >
+                                  <span>Accept as Owner</span>
+                                  <ArrowRight className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => cancelBooking(bk.id)}
+                                  className="px-3 py-1.5 rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400 hover:bg-rose-100 font-bold text-xs transition cursor-pointer"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
                             )}
 
                             {bk.stage === 'ACCEPTED' && (
-                              <span className="text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-3 py-1.5 rounded-xl border border-blue-200">
-                                📍 Owner accepted! Meet owner at {bk.ownerLocation || 'Bhimavaram'} for working inspection
-                              </span>
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span className="text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-3 py-1.5 rounded-xl border border-blue-200">
+                                  📍 Owner accepted! Meet owner at {bk.ownerLocation || 'Bhimavaram'} for working inspection
+                                </span>
+                                <button
+                                  onClick={() => setBookingRoleView('owner')}
+                                  className="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs shadow transition flex items-center gap-1 cursor-pointer"
+                                  title="Switch to Owner view to log inspection"
+                                >
+                                  <span>Inspect as Owner</span>
+                                  <ArrowRight className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
                             )}
 
                             {bk.stage === 'INSPECTION_PENDING_RENTER' && (
