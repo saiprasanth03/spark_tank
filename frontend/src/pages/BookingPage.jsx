@@ -16,7 +16,9 @@ import {
   ClipboardCheck,
   Zap,
   UserCheck,
-  FileText
+  FileText,
+  Upload,
+  Camera
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -34,6 +36,7 @@ export const BookingPage = () => {
   const [endDate, setEndDate] = useState('2026-08-20');
   const [deliveryOption, setDeliveryOption] = useState('pickup');
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [idProofBase64, setIdProofBase64] = useState('');
   const [hasViewedAgreement, setHasViewedAgreement] = useState(false);
   const [isAgreementModalOpen, setIsAgreementModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -46,7 +49,23 @@ export const BookingPage = () => {
 
   const totalRent = item.dailyRent * days;
   const platformFee = 9.00;
-  const estimatedTotal = totalRent + item.deposit + platformFee;
+  
+  // 50% Trust Discount on Deposit if ID Proof is uploaded
+  const effectiveDeposit = idProofBase64 ? Math.round(item.deposit * 0.5) : item.deposit;
+  
+  const estimatedTotal = totalRent + effectiveDeposit + platformFee;
+
+  const handleIdProofUpload = (e) => {
+    const file = e.target.files[0];
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setIdProofBase64(reader.result);
+        toast.success('ID Proof securely attached. Deposit reduced by 50%!');
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleSendBookingRequest = (e) => {
     e.preventDefault();
@@ -68,9 +87,10 @@ export const BookingPage = () => {
         days,
         dailyRent: item.dailyRent,
         totalRent,
-        deposit: item.deposit,
+        deposit: effectiveDeposit,
         platformFee,
         totalPaid: estimatedTotal,
+        renterIdProof: idProofBase64,
         pickupType: deliveryOption === 'pickup' ? 'Local Self-Pickup' : 'Doorstep Delivery',
         renterName: user?.name || 'Registered Renter',
         renterEmail: user?.email || 'renter@example.com',
@@ -224,6 +244,59 @@ export const BookingPage = () => {
             </div>
           </div>
 
+          {/* ID Verification */}
+          <div className="glass-card p-6 rounded-3xl space-y-4 border border-slate-200/80 dark:border-slate-800">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h3 className="font-bold text-slate-900 dark:text-white text-lg flex items-center gap-2">
+                  <ShieldCheck className="w-5 h-5 text-blue-500" />
+                  ID Verification (Optional)
+                </h3>
+                <p className="text-xs text-slate-500 mt-1 font-semibold">
+                  Upload a valid ID proof (Aadhar/PAN) to instantly get a <span className="text-emerald-500 font-extrabold">50% discount</span> on the required security deposit!
+                </p>
+              </div>
+            </div>
+
+            {idProofBase64 ? (
+              <div className="p-4 rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-slate-900 dark:text-white">ID Proof Verified</p>
+                    <p className="text-[11px] text-emerald-600 font-bold">50% Trust Discount Applied to Deposit!</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIdProofBase64('')}
+                  className="text-xs font-bold text-slate-400 hover:text-rose-500 transition"
+                >
+                  Remove
+                </button>
+              </div>
+            ) : (
+              <label className="p-6 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl text-center bg-slate-50/50 dark:bg-slate-800/40 hover:bg-slate-100/80 transition cursor-pointer flex flex-col items-center justify-center gap-2 group">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleIdProofUpload}
+                  className="hidden"
+                />
+                <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-950/60 text-blue-600 flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
+                  <Camera className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                    Click to Upload ID Proof Image
+                  </p>
+                  <p className="text-[10px] text-slate-500">Securely verified. Never shared with the owner.</p>
+                </div>
+              </label>
+            )}
+          </div>
+
           {/* Terms Acceptance */}
           <div className="glass-card p-6 rounded-3xl space-y-4 border border-slate-200/80 dark:border-slate-800">
             
@@ -247,7 +320,7 @@ export const BookingPage = () => {
                 className="mt-0.5 w-4 h-4 text-blue-600 rounded focus:ring-blue-500 disabled:cursor-not-allowed"
               />
               <span className="text-xs text-slate-700 dark:text-slate-300 font-semibold leading-relaxed">
-                I agree to meet the owner for working condition verification, accept the Digital Rental Agreement upon pickup, and authorize the refundable security deposit of ₹{item.deposit}.
+                I agree to meet the owner for working condition verification, accept the Digital Rental Agreement upon pickup, and authorize the refundable security deposit of ₹{effectiveDeposit}.
               </span>
             </label>
             {!hasViewedAgreement && (
@@ -283,12 +356,20 @@ export const BookingPage = () => {
                 <span className="font-extrabold text-slate-900 dark:text-white">₹9.00</span>
               </div>
 
-              <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex justify-between items-center text-xs font-bold text-emerald-800 dark:text-emerald-300">
-                <span className="flex items-center gap-1.5">
+              <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex justify-between items-center text-xs font-bold text-emerald-800 dark:text-emerald-300 relative overflow-hidden">
+                <span className="flex items-center gap-1.5 relative z-10">
                   <ShieldCheck className="w-4 h-4 text-emerald-600" />
                   Refundable Security Deposit:
                 </span>
-                <span className="text-sm font-extrabold">₹{item.deposit}</span>
+                <div className="flex items-center gap-2 relative z-10">
+                  {idProofBase64 && (
+                    <span className="line-through text-emerald-600/50">₹{item.deposit}</span>
+                  )}
+                  <span className="text-sm font-extrabold">₹{effectiveDeposit}</span>
+                </div>
+                {idProofBase64 && (
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-emerald-200/20 to-transparent animate-shimmer" />
+                )}
               </div>
 
               <div className="pt-3 border-t border-slate-200 dark:border-slate-700 flex justify-between items-baseline text-lg font-extrabold text-slate-900 dark:text-white">
