@@ -233,6 +233,35 @@ export const BookingProvider = ({ children }) => {
     ];
   });
 
+  // Fetch live cloud items from MongoDB API on startup
+  useEffect(() => {
+    const fetchCloudItems = async () => {
+      try {
+        const res = await fetch('/api/items');
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+            setItems(prev => {
+              const cloudItems = json.data;
+              const cloudIds = new Set(cloudItems.map(c => c.id));
+              // Merge any local-only custom items that might not have reached server yet
+              const localCustom = prev.filter(p => !cloudIds.has(p.id) && p.id.startsWith('item-17'));
+              const merged = [...localCustom, ...cloudItems];
+              try {
+                localStorage.setItem(STORAGE_KEYS.ITEMS, JSON.stringify(merged));
+              } catch (e) {}
+              return merged;
+            });
+          }
+        }
+      } catch (err) {
+        // Fallback to cached items
+      }
+    };
+
+    fetchCloudItems();
+  }, []);
+
   // Real-time synchronization across browser tabs/windows
   useEffect(() => {
     const handleStorageChange = (e) => {
@@ -567,7 +596,8 @@ export const BookingProvider = ({ children }) => {
     };
 
     setItems(prev => {
-      const updated = [newItem, ...prev];
+      const filtered = prev.filter(i => i.id !== newItem.id);
+      const updated = [newItem, ...filtered];
       try {
         localStorage.setItem(STORAGE_KEYS.ITEMS, JSON.stringify(updated));
       } catch (e) {}
@@ -575,22 +605,51 @@ export const BookingProvider = ({ children }) => {
     });
 
     setMyListings(prev => {
-      const updated = [newItem, ...prev];
+      const filtered = prev.filter(i => i.id !== newItem.id);
+      const updated = [newItem, ...filtered];
       try {
         localStorage.setItem(STORAGE_KEYS.MY_LISTINGS, JSON.stringify(updated));
       } catch (e) {}
       return updated;
     });
 
+    // Sync to MongoDB Cloud Database in background
+    fetch('/api/items', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newItem)
+    }).catch(() => {});
+
     toast.success('🎉 Product added successfully and is now live across Marketplace & Map!');
     return newItem;
   };
 
-  // ADMIN EDITING & GOVERNANCE ACTIONS
+  // OWNER & ADMIN EDITING ACTIONS
   const updateItem = (itemId, updatedFields) => {
-    setItems(prev => prev.map(i => i.id === itemId ? { ...i, ...updatedFields } : i));
-    setMyListings(prev => prev.map(i => i.id === itemId ? { ...i, ...updatedFields } : i));
-    toast.success('Listing updated by Admin!');
+    setItems(prev => {
+      const updated = prev.map(i => i.id === itemId ? { ...i, ...updatedFields } : i);
+      try {
+        localStorage.setItem(STORAGE_KEYS.ITEMS, JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+
+    setMyListings(prev => {
+      const updated = prev.map(i => i.id === itemId ? { ...i, ...updatedFields } : i);
+      try {
+        localStorage.setItem(STORAGE_KEYS.MY_LISTINGS, JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+
+    // Sync updates to MongoDB Cloud Database in background
+    fetch('/api/items', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: itemId, ...updatedFields })
+    }).catch(() => {});
+
+    toast.success('Product details updated successfully!');
   };
 
   const deleteItem = (itemId) => {
@@ -601,6 +660,7 @@ export const BookingProvider = ({ children }) => {
       } catch (e) {}
       return updated;
     });
+
     setMyListings(prev => {
       const updated = prev.filter(i => i.id !== itemId);
       try {
@@ -608,7 +668,13 @@ export const BookingProvider = ({ children }) => {
       } catch (e) {}
       return updated;
     });
-    toast.success('Listing permanently removed by Admin!');
+
+    // Sync deletion to MongoDB Cloud Database in background
+    fetch(`/api/items?id=${itemId}`, {
+      method: 'DELETE'
+    }).catch(() => {});
+
+    toast.success('Listing permanently removed!');
   };
 
   const clearTestListings = () => {

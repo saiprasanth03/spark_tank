@@ -8,6 +8,11 @@
     "start": "concurrently \"npm --prefix frontend run dev\" \"npm --prefix backend run start\"",
     "build": "npm --prefix frontend run build"
   },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "mongoose": "^8.9.5"
+  },
   "devDependencies": {
     "concurrently": "^9.1.2"
   }
