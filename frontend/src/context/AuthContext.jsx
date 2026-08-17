@@ -96,31 +96,41 @@ export const AuthProvider = ({ children }) => {
         return true;
       }
 
-      // Find registered user
-      const existingUser = registeredUsers.find(u => u.email.toLowerCase() === cleanEmail);
+      // 1. Try to find user from live MongoDB Atlas backend
+      let matchedUser = null;
+      try {
+        const res = await fetch('/api/users');
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && Array.isArray(json.data)) {
+            matchedUser = json.data.find(u => u.email?.toLowerCase() === cleanEmail);
+            setRegisteredUsers(json.data);
+          }
+        }
+      } catch (err) {
+        // Fallback to local cache if network error
+      }
 
-      if (!existingUser) {
+      // 2. If not found in live query, check local cache
+      if (!matchedUser) {
+        matchedUser = registeredUsers.find(u => u.email?.toLowerCase() === cleanEmail);
+      }
+
+      if (!matchedUser) {
         toast.error('Account not registered! Please sign up first.');
         return false;
       }
 
-      if (existingUser.password && existingUser.password !== cleanPassword) {
+      if (matchedUser.password && matchedUser.password !== cleanPassword) {
         toast.error('Incorrect password. Please check your credentials.');
         return false;
       }
 
-      setUser(existingUser);
+      setUser(matchedUser);
       setToken('jwt-' + Date.now());
       localStorage.setItem('borrowbridge_token', 'jwt-' + Date.now());
 
-      // Sync to MongoDB
-      fetch('/api/users', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(existingUser)
-      }).catch(() => {});
-
-      toast.success(`Welcome back, ${existingUser.name}!`);
+      toast.success(`Welcome back, ${matchedUser.name}!`);
       return true;
     } catch (err) {
       toast.error('Failed to log in');
@@ -143,9 +153,19 @@ export const AuthProvider = ({ children }) => {
         return false;
       }
 
-      // Check if already registered
-      const alreadyExists = registeredUsers.some(u => u.email.toLowerCase() === cleanEmail);
-      if (alreadyExists) {
+      // Check if already registered in MongoDB Atlas
+      let existingInDb = false;
+      try {
+        const res = await fetch('/api/users');
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && Array.isArray(json.data)) {
+            existingInDb = json.data.some(u => u.email?.toLowerCase() === cleanEmail);
+          }
+        }
+      } catch (e) {}
+
+      if (existingInDb || registeredUsers.some(u => u.email?.toLowerCase() === cleanEmail)) {
         toast.error('An account with this email already exists! Please log in.');
         return false;
       }
@@ -156,29 +176,33 @@ export const AuthProvider = ({ children }) => {
         name: cleanName,
         email: cleanEmail,
         password: cleanPassword,
-        phone: userData.phone || 'Not specified',
+        phone: userData.phone || '+91 98765 43210',
         role: isAdmin ? 'Admin' : (userData.role || 'Both'),
-        avatar: null,
-        location: 'Not specified',
+        avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=250&q=80',
+        location: userData.location || 'Bhimavaram, AP',
         joined: 'August 2026',
         verified: true,
-        rating: null,
+        rating: 5.0,
         reviews: []
       };
 
-      setRegisteredUsers(prev => [...prev, newUser]);
+      // Direct synchronous POST to MongoDB Atlas
+      try {
+        await fetch('/api/users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newUser)
+        });
+      } catch (err) {
+        console.warn('MongoDB user sync warning:', err);
+      }
+
+      setRegisteredUsers(prev => [...prev.filter(u => u.email?.toLowerCase() !== cleanEmail), newUser]);
       setUser(newUser);
       setToken('jwt-' + Date.now());
       localStorage.setItem('borrowbridge_token', 'jwt-' + Date.now());
 
-      // Save to MongoDB Atlas test.users
-      fetch('/api/users', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newUser)
-      }).catch(() => {});
-
-      toast.success('Account created successfully!');
+      toast.success('🎉 Account created successfully!');
       return true;
     } catch (err) {
       toast.error('Registration failed');
