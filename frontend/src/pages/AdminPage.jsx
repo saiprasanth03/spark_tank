@@ -703,17 +703,17 @@ export const AdminPage = () => {
                       {fb.title || 'User Experience Feedback'}
                     </h4>
                     <p className="text-xs text-slate-600 dark:text-slate-300 mt-2 leading-relaxed italic bg-slate-50 dark:bg-slate-800/60 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-700">
-                      "{fb.comment || fb.description || fb.feedback || 'No comment text provided'}"
+                      "{fb.message || fb.comment || fb.description || fb.feedback || 'No comment text provided'}"
                     </p>
                   </div>
 
                   <div className="flex items-center justify-between text-xs text-slate-400 pt-2 border-t border-slate-100 dark:border-slate-800">
                     <div className="flex items-center gap-2">
                       <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-[10px] flex items-center justify-center">
-                        {fb.submitterName ? fb.submitterName.charAt(0) : 'U'}
+                        {(fb.submittedBy || fb.submitterName || 'U').charAt(0).toUpperCase()}
                       </div>
                       <span className="font-medium text-slate-700 dark:text-slate-300">
-                        {fb.submitterName || 'Community User'} {fb.email ? `(${fb.email})` : ''}
+                        {fb.submittedBy || fb.submitterName || 'Community User'} {fb.email ? `(${fb.email})` : ''}
                       </span>
                     </div>
                     <span>{fb.date || 'Recent'}</span>

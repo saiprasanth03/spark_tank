@@ -6,6 +6,7 @@ export const ReturnHandoverModal = ({ booking, onClose, onSubmitReturnHandover }
   const [hasDamage, setHasDamage] = useState(false);
   const [damageAmount, setDamageAmount] = useState('');
   const [damageDetails, setDamageDetails] = useState('');
+  const [proofImage, setProofImage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!booking) return null;
@@ -21,7 +22,8 @@ export const ReturnHandoverModal = ({ booking, onClose, onSubmitReturnHandover }
       onSubmitReturnHandover(booking.id, {
         hasDamage,
         damageDetails: hasDamage ? damageDetails : 'Item returned in verified good working condition with zero damage.',
-        damageAmount: hasDamage ? validDamageAmount : 0
+        damageAmount: hasDamage ? validDamageAmount : 0,
+        proofImage: hasDamage ? proofImage : null
       });
       setIsSubmitting(false);
       onClose();
@@ -137,6 +139,19 @@ export const ReturnHandoverModal = ({ booking, onClose, onSubmitReturnHandover }
                   value={damageDetails}
                   onChange={(e) => setDamageDetails(e.target.value)}
                   placeholder="e.g. Scratched lens element, missing charging cable, cracked battery door..."
+                  className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700 text-xs font-medium text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-900 dark:text-white">
+                  Proof of Damage (Optional Image URL)
+                </label>
+                <input
+                  type="text"
+                  value={proofImage}
+                  onChange={(e) => setProofImage(e.target.value)}
+                  placeholder="Paste a link to a photo of the damage"
                   className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700 text-xs font-medium text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500"
                 />
               </div>

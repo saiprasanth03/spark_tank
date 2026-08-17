@@ -27,6 +27,7 @@ export const ReviewModal = ({ booking, onClose, onSubmitReview }) => {
         onSubmitReview({
           id: `rev-${Date.now()}`,
           bookingId: booking.id,
+          itemId: booking.itemId,
           itemTitle: booking.itemTitle,
           reviewer: booking.renterName || 'Verified Consumer',
           rating,

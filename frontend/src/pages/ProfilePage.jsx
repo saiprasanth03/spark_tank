@@ -104,12 +104,8 @@ export const ProfilePage = () => {
     // Save to local profile view
     setUserReviewsList(prev => [newReview, ...prev]);
     // Save to actual product context so it shows on the item detail page
-    if (addProductReview && newReview.bookingId) {
-      // Extract itemId from booking. We need to find the booking from displayedBookings
-      const bk = displayedBookings.find(b => b.id === newReview.bookingId);
-      if (bk && bk.itemId) {
-        addProductReview(bk.itemId, newReview);
-      }
+    if (addProductReview && newReview.itemId) {
+      addProductReview(newReview.itemId, newReview);
     }
   };
 
