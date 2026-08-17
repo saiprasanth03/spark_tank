@@ -24,6 +24,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { ImageCropperModal } from '../components/ImageCropperModal';
 
 export const ListItemPage = () => {
   const navigate = useNavigate();
@@ -58,9 +59,10 @@ export const ListItemPage = () => {
   // Photo Upload & URL State - ZERO default images
   const [selectedFile, setSelectedFile] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
-  const [imageUrlInput, setImageUrlInput] = useState('');
   const [additionalImages, setAdditionalImages] = useState([]);
   const [newAdditionalImage, setNewAdditionalImage] = useState('');
+  const [imageUrlInput, setImageUrlInput] = useState('');
+  const [cropQueue, setCropQueue] = useState([]); // Array of { src, target }
   const [createdProduct, setCreatedProduct] = useState(null);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -125,8 +127,7 @@ export const ListItemPage = () => {
       setSelectedFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImagePreview(reader.result);
-        toast.success('Product photo loaded!');
+        setCropQueue(prev => [...prev, { src: reader.result, target: 'main' }]);
       };
       reader.readAsDataURL(file);
     }
@@ -137,11 +138,10 @@ export const ListItemPage = () => {
     files.forEach(file => {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setAdditionalImages(prev => [...prev, reader.result]);
+        setCropQueue(prev => [...prev, { src: reader.result, target: 'additional' }]);
       };
       reader.readAsDataURL(file);
     });
-    if (files.length > 0) toast.success(`${files.length} additional image(s) loaded!`);
   };
 
   const handleImageUrlSubmit = (e) => {
@@ -154,6 +154,11 @@ export const ListItemPage = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    // If there's an image in the crop queue, we handle that through the modal
+    if (cropQueue.length > 0) {
+      return; 
+    }
 
     // STRICT AUTHENTICATION CHECK
     if (!isAuthenticated || !user) {
@@ -397,7 +402,7 @@ export const ListItemPage = () => {
         </div>
 
         <div className="space-y-3">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 text-xs font-bold border border-rose-200 dark:border-rose-800">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:rose-300 text-xs font-bold border border-rose-200 dark:border-rose-800">
             <Lock className="w-3.5 h-3.5" />
             Seller Access Restricted
           </div>
@@ -922,6 +927,22 @@ export const ListItemPage = () => {
         </button>
 
       </form>
+
+      <ImageCropperModal
+        isOpen={cropQueue.length > 0}
+        imageSrc={cropQueue.length > 0 ? cropQueue[0].src : null}
+        onClose={() => setCropQueue(prev => prev.slice(1))}
+        onCropComplete={(croppedBase64) => {
+          if (cropQueue[0].target === 'main') {
+            setImagePreview(croppedBase64);
+            toast.success('Main photo updated!');
+          } else {
+            setAdditionalImages(prev => [...prev, croppedBase64]);
+            toast.success('Additional photo added!');
+          }
+          setCropQueue(prev => prev.slice(1));
+        }}
+      />
     </div>
   );
 };

@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { categories } from '../data/items';
 import toast from 'react-hot-toast';
+import { ImageCropperModal } from './ImageCropperModal';
 
 export const EditProductModal = ({ isOpen, onClose, item, onSave, isSuperAdmin = false }) => {
   const [title, setTitle] = useState('');
@@ -36,6 +37,7 @@ export const EditProductModal = ({ isOpen, onClose, item, onSave, isSuperAdmin =
   const [latitude, setLatitude] = useState(16.5449);
   const [longitude, setLongitude] = useState(81.5212);
   const [isLocating, setIsLocating] = useState(false);
+  const [cropQueue, setCropQueue] = useState([]); // Array of { src, target }
 
   useEffect(() => {
     if (item) {
@@ -97,8 +99,7 @@ export const EditProductModal = ({ isOpen, onClose, item, onSave, isSuperAdmin =
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImageUrl(reader.result);
-        toast.success('Image uploaded for preview!');
+        setCropQueue(prev => [...prev, { src: reader.result, target: 'main' }]);
       };
       reader.readAsDataURL(file);
     }
@@ -109,15 +110,19 @@ export const EditProductModal = ({ isOpen, onClose, item, onSave, isSuperAdmin =
     files.forEach(file => {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setAdditionalImages(prev => [...prev, reader.result]);
+        setCropQueue(prev => [...prev, { src: reader.result, target: 'additional' }]);
       };
       reader.readAsDataURL(file);
     });
-    if (files.length > 0) toast.success(`${files.length} additional image(s) loaded!`);
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    // If there's an image in the crop queue, we handle that through the modal
+    if (cropQueue.length > 0) {
+      return; 
+    }
 
     if (!title.trim()) {
       toast.error('Please enter a product title');
@@ -153,8 +158,11 @@ export const EditProductModal = ({ isOpen, onClose, item, onSave, isSuperAdmin =
     onClose();
   };
 
+  if (!isOpen || !item) return null;
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md overflow-y-auto">
+    <>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-900/40 backdrop-blur-sm overflow-y-auto">
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -523,5 +531,22 @@ export const EditProductModal = ({ isOpen, onClose, item, onSave, isSuperAdmin =
         </form>
       </motion.div>
     </div>
+    
+    <ImageCropperModal
+      isOpen={cropQueue.length > 0}
+      imageSrc={cropQueue.length > 0 ? cropQueue[0].src : null}
+      onClose={() => setCropQueue(prev => prev.slice(1))}
+      onCropComplete={(croppedBase64) => {
+        if (cropQueue[0].target === 'main') {
+          setImageUrl(croppedBase64);
+          toast.success('Main photo updated!');
+        } else {
+          setAdditionalImages(prev => [...prev, croppedBase64]);
+          toast.success('Additional photo added!');
+        }
+        setCropQueue(prev => prev.slice(1));
+      }}
+    />
+    </>
   );
 };
