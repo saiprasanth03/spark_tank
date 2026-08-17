@@ -1,22 +1,38 @@
 import mongoose from 'mongoose';
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://24pa1a05k6_db_user:S9ljwbymSsNIqHs5@cluster0.8lqsniy.mongodb.net/test?retryWrites=true&w=majority';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://24pa1a05k6_db_user:S9ljwbymSsNIqHs5@cluster0.8lqsniy.mongodb.net/test?retryWrites=true&w=majority&appName=Cluster0';
 
-let isConnected = false;
+let cached = global.mongoose;
+
+if (!cached) {
+  cached = global.mongoose = { conn: null, promise: null };
+}
 
 export async function connectToDatabase() {
-  if (isConnected && mongoose.connection.readyState === 1) {
-    return mongoose.connection;
+  if (cached.conn) {
+    return cached.conn;
   }
 
-  const db = await mongoose.connect(MONGODB_URI, {
-    serverSelectionTimeoutMS: 10000,
-    connectTimeoutMS: 10000,
-    socketTimeoutMS: 20000
-  });
+  if (!cached.promise) {
+    const opts = {
+      bufferCommands: false,
+      serverSelectionTimeoutMS: 8000,
+      connectTimeoutMS: 8000
+    };
 
-  isConnected = db.connections[0].readyState === 1;
-  return db;
+    cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongooseInstance) => {
+      return mongooseInstance;
+    });
+  }
+
+  try {
+    cached.conn = await cached.promise;
+  } catch (e) {
+    cached.promise = null;
+    throw e;
+  }
+
+  return cached.conn;
 }
 
 const userSchema = new mongoose.Schema({
