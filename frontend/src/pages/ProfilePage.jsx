@@ -442,16 +442,6 @@ export const ProfilePage = () => {
                           <h3 className="font-bold text-slate-900 dark:text-white text-base">
                             {bk.itemTitle}
                           </h3>
-                          
-                          {/* TEMPORARY DEBUG DATA - PLEASE IGNORE IN PRODUCTION */}
-                          <div className="bg-slate-900 text-green-400 p-2 rounded text-[8px] overflow-x-auto w-full max-w-sm mt-2">
-                            <pre>{JSON.stringify({ 
-                              id: bk.id, 
-                              renterAadhar: bk.renterAadhar, 
-                              hasIdProof: !!bk.renterIdProof,
-                              isRenterView: isRenterView
-                            }, null, 2)}</pre>
-                          </div>
 
                           <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500">
                             <span className="flex items-center gap-1 font-semibold text-slate-700 dark:text-slate-300">
