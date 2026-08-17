@@ -4,6 +4,7 @@ import { useBooking } from '../context/BookingContext';
 import { useAuth } from '../context/AuthContext';
 import { isAdminEmail } from '../data/adminEmails';
 import { MapView } from '../components/MapView';
+import { EditProductModal } from '../components/EditProductModal';
 import { 
   Star, 
   MapPin, 
@@ -25,24 +26,26 @@ import {
   Send,
   Sparkles,
   ThumbsUp,
-  Trash2
+  Trash2,
+  Edit3
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export const ItemDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { items, isWishlisted, toggleWishlist, getProductReviews, addProductReview, deleteItem } = useBooking();
+  const { items, isWishlisted, toggleWishlist, getProductReviews, addProductReview, deleteItem, updateItem } = useBooking();
   const { user, isAuthenticated } = useAuth();
 
   const item = items.find(i => i.id === id) || items[0];
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [slideshowOpen, setSlideshowOpen] = useState(false);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const isAdmin = user && isAdminEmail(user.email);
   const isOwner = user && (user.email === item?.owner?.email || user.name === item?.owner?.name);
-  const canDelete = isAdmin || isOwner;
+  const canModify = isAdmin || isOwner;
 
   // Product Feedback Form State
   const [feedbackRating, setFeedbackRating] = useState(5);
@@ -467,21 +470,35 @@ export const ItemDetailPage = () => {
               </p>
             </div>
 
-            {/* ADMIN / OWNER REMOVE LISTING BUTTON */}
-            {canDelete && (
-              <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
-                <button
-                  onClick={() => {
-                    if (window.confirm(`Are you sure you want to permanently remove "${item.title}" from the marketplace?`)) {
-                      deleteItem(item.id);
-                      navigate('/explore');
-                    }
-                  }}
-                  className="w-full py-2.5 rounded-xl bg-rose-50 hover:bg-rose-600 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 hover:text-white font-extrabold text-xs transition border border-rose-200 dark:border-rose-900/50 flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  <span>Remove Listing ({isAdmin ? 'Admin Moderation' : 'Owner Action'})</span>
-                </button>
+            {/* OWNER & ADMIN EDIT / DELETE ACTION CONTROLS */}
+            {canModify && (
+              <div className="pt-3 border-t border-slate-200 dark:border-slate-800 space-y-2">
+                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
+                  {isAdmin ? '🛡️ Admin Master Controls' : '👤 Owner Listing Controls'}
+                </span>
+                
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => setIsEditModalOpen(true)}
+                    className="py-2.5 px-3 rounded-xl bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 text-blue-600 dark:text-blue-400 font-bold text-xs transition border border-blue-200 dark:border-blue-800 flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <Edit3 className="w-3.5 h-3.5" />
+                    <span>Edit Product</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      if (window.confirm(`Are you sure you want to permanently remove "${item.title}" from the marketplace?`)) {
+                        deleteItem(item.id);
+                        navigate('/explore');
+                      }
+                    }}
+                    className="py-2.5 px-3 rounded-xl bg-rose-50 hover:bg-rose-600 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 hover:text-white font-bold text-xs transition border border-rose-200 dark:border-rose-900/50 flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Delete</span>
+                  </button>
+                </div>
               </div>
             )}
 
@@ -615,6 +632,15 @@ export const ItemDetailPage = () => {
           </div>
         </div>
       )}
+
+      {/* EDIT PRODUCT MODAL */}
+      <EditProductModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        item={item}
+        onSave={updateItem}
+        isSuperAdmin={isAdmin}
+      />
 
     </div>
   );

@@ -10,6 +10,7 @@ import { PickupInspectionModal } from '../components/PickupInspectionModal';
 import { RenterPaymentModal } from '../components/RenterPaymentModal';
 import { ReturnHandoverModal } from '../components/ReturnHandoverModal';
 import { WebsiteFeedbackModal } from '../components/WebsiteFeedbackModal';
+import { EditProductModal } from '../components/EditProductModal';
 import { 
   User, 
   Mail, 
@@ -26,23 +27,25 @@ import {
   XCircle, 
   RotateCcw, 
   CheckCircle2, 
-  FileText,
-  AlertTriangle,
-  ClipboardCheck,
-  CreditCard,
-  ArrowRight,
-  Sparkles,
-  Zap,
-  Check,
-  MessageSquare,
-  Send
+  FileText, 
+  AlertTriangle, 
+  ClipboardCheck, 
+  CreditCard, 
+  ArrowRight, 
+  Sparkles, 
+  Zap, 
+  Check, 
+  MessageSquare, 
+  Send,
+  Edit3,
+  Trash2
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export const ProfilePage = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { user, logout } = useAuth();
+  const { user, logout, isAdmin } = useAuth();
   const { 
     items, 
     myBookings, 
@@ -57,7 +60,9 @@ export const ProfilePage = () => {
     renterAcceptAndPay,
     initiateReturn,
     submitReturnHandover,
-    cancelBooking 
+    cancelBooking,
+    deleteItem,
+    updateItem
   } = useBooking();
 
   // Active Modals
@@ -67,6 +72,7 @@ export const ProfilePage = () => {
   const [paymentBooking, setPaymentBooking] = useState(null);
   const [returnHandoverBooking, setReturnHandoverBooking] = useState(null);
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
+  const [editingListing, setEditingListing] = useState(null);
   const [userReviewsList, setUserReviewsList] = useState(user?.reviews || []);
 
   const activeTab = searchParams.get('tab') || 'bookings';
@@ -637,13 +643,61 @@ export const ProfilePage = () => {
         </div>
       )}
 
-      {/* TAB 2: MY LISTINGS */}
+      {/* TAB 2: MY LISTINGS (FULL OWNER MANAGEMENT) */}
       {activeTab === 'listings' && (
         <div className="space-y-6">
+          
+          {/* Owner Listings Action Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-3xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700">
+            <div>
+              <h3 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                <Package className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                My Listed Equipment ({displayListings.length})
+              </h3>
+              <p className="text-xs text-slate-500 mt-0.5">
+                As the product owner, you can edit product details, adjust daily rent or deposits, and remove listings anytime.
+              </p>
+            </div>
+
+            <button
+              onClick={() => navigate('/list-item')}
+              className="px-5 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs shadow-md shadow-blue-500/20 transition flex items-center justify-center gap-2 cursor-pointer flex-shrink-0"
+            >
+              <PlusCircle className="w-4 h-4" />
+              List New Product
+            </button>
+          </div>
+
           {displayListings.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {displayListings.map(item => (
-                <ItemCard key={item.id} item={item} />
+                <div key={item.id} className="relative flex flex-col justify-between">
+                  <ItemCard item={item} />
+                  
+                  {/* Dedicated Owner Quick Action Toolbar */}
+                  <div className="mt-2 p-2 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-between gap-2 shadow-sm">
+                    <button
+                      onClick={() => setEditingListing(item)}
+                      className="flex-1 py-2 px-3 rounded-xl bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-600 hover:text-white text-blue-600 dark:text-blue-400 font-bold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer border border-blue-200 dark:border-blue-800"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                      Edit Listing
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        if (window.confirm(`Are you sure you want to permanently delete "${item.title}"?`)) {
+                          deleteItem(item.id);
+                        }
+                      }}
+                      className="py-2 px-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-600 hover:text-white text-rose-600 dark:text-rose-400 font-bold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer border border-rose-200 dark:border-rose-900/50"
+                      title="Delete Product"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      Delete
+                    </button>
+                  </div>
+                </div>
               ))}
             </div>
           ) : (
@@ -821,6 +875,15 @@ export const ProfilePage = () => {
           onClose={() => setIsFeedbackModalOpen(false)}
         />
       )}
+
+      {/* EDIT PRODUCT MODAL FOR OWNER */}
+      <EditProductModal
+        isOpen={!!editingListing}
+        onClose={() => setEditingListing(null)}
+        item={editingListing}
+        onSave={updateItem}
+        isSuperAdmin={isAdmin}
+      />
 
     </div>
   );
