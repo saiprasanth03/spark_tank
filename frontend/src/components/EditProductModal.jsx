@@ -101,6 +101,18 @@ export const EditProductModal = ({ isOpen, onClose, item, onSave, isSuperAdmin =
     }
   };
 
+  const handleAdditionalImagesChange = (e) => {
+    const files = Array.from(e.target.files);
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAdditionalImages(prev => [...prev, reader.result]);
+      };
+      reader.readAsDataURL(file);
+    });
+    if (files.length > 0) toast.success(`${files.length} additional image(s) loaded!`);
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -336,8 +348,13 @@ export const EditProductModal = ({ isOpen, onClose, item, onSave, isSuperAdmin =
             </div>
             
             <div className="space-y-2 pt-2">
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                Additional Images (Optional URLs)
+              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between">
+                <span>Additional Images (Optional)</span>
+                <label className="px-3 py-1.5 rounded-xl bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 text-slate-800 dark:text-slate-200 text-[10px] font-bold transition cursor-pointer flex items-center gap-1.5">
+                  <Upload className="w-3 h-3" />
+                  Upload More
+                  <input type="file" multiple accept="image/*" onChange={handleAdditionalImagesChange} className="hidden" />
+                </label>
               </label>
               <div className="flex gap-2">
                 <input
