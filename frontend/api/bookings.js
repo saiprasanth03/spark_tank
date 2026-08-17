@@ -42,7 +42,7 @@ export default async function handler(req, res) {
       const savedBooking = await Booking.findOneAndUpdate(
         { id: bookingData.id },
         { ...bookingData },
-        { upsert: true, new: true }
+        { upsert: true, new: true, strict: false }
       );
 
       return res.status(201).json({ success: true, data: savedBooking });
@@ -60,7 +60,7 @@ export default async function handler(req, res) {
       const updated = await Booking.findOneAndUpdate(
         { id: bookingId },
         { $set: updateFields },
-        { new: true }
+        { new: true, strict: false }
       );
 
       return res.status(200).json({ success: true, data: updated });
