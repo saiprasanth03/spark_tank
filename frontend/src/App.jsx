@@ -27,6 +27,8 @@ import { NotFoundPage } from './pages/NotFoundPage';
 
 import { MessageSquare, Sparkles } from 'lucide-react';
 
+import { ErrorBoundary } from './components/ErrorBoundary';
+
 // Scroll to top on route change helper
 const ScrollToTopOnRouteChange = () => {
   const { pathname } = useLocation();
@@ -51,20 +53,22 @@ export default function App() {
               {/* Sticky Navbar with Feedback trigger */}
               <Navbar onOpenFeedback={() => setIsFeedbackModalOpen(true)} />
 
-              {/* Application Routes */}
+              {/* Application Routes with Error Boundary */}
               <main>
-                <Routes>
-                  <Route path="/" element={<LandingPage />} />
-                  <Route path="/explore" element={<ExplorePage />} />
-                  <Route path="/item/:id" element={<ItemDetailPage />} />
-                  <Route path="/book/:id" element={<BookingPage />} />
-                  <Route path="/profile" element={<ProfilePage />} />
-                  <Route path="/list-item" element={<ListItemPage />} />
-                  <Route path="/login" element={<LoginPage />} />
-                  <Route path="/register" element={<RegisterPage />} />
-                  <Route path="/admin" element={<AdminPage />} />
-                  <Route path="*" element={<NotFoundPage />} />
-                </Routes>
+                <ErrorBoundary>
+                  <Routes>
+                    <Route path="/" element={<LandingPage />} />
+                    <Route path="/explore" element={<ExplorePage />} />
+                    <Route path="/item/:id" element={<ItemDetailPage />} />
+                    <Route path="/book/:id" element={<BookingPage />} />
+                    <Route path="/profile" element={<ProfilePage />} />
+                    <Route path="/list-item" element={<ListItemPage />} />
+                    <Route path="/login" element={<LoginPage />} />
+                    <Route path="/register" element={<RegisterPage />} />
+                    <Route path="/admin" element={<AdminPage />} />
+                    <Route path="*" element={<NotFoundPage />} />
+                  </Routes>
+                </ErrorBoundary>
               </main>
             </div>
 
