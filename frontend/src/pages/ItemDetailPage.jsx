@@ -268,24 +268,7 @@ export const ItemDetailPage = () => {
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2 mt-3 sm:mt-0">
-              <a
-                href={`tel:${item.owner.phone}`}
-                className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-600 transition flex items-center gap-2 font-bold text-xs"
-                title="Call Lender"
-              >
-                <Phone className="w-4 h-4" />
-                {item.owner.phone}
-              </a>
-              <button
-                onClick={() => toast.success(`Chat opened with owner: ${item.owner.name}`)}
-                className="px-4 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition shadow-md shadow-blue-500/20 cursor-pointer flex items-center gap-2 font-bold text-xs"
-                title="Message Lender"
-              >
-                <MessageSquare className="w-4 h-4" />
-                Chat
-              </button>
-            </div>
+
           </div>
 
           {/* Description & Specs */}
