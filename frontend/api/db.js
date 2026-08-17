@@ -2,32 +2,21 @@ import mongoose from 'mongoose';
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://24pa1a05k6_db_user:S9ljwbymSsNIqHs5@cluster0.8lqsniy.mongodb.net/test?retryWrites=true&w=majority';
 
-let cached = global.mongoose;
-
-if (!cached) {
-  cached = global.mongoose = { conn: null, promise: null };
-}
+let isConnected = false;
 
 export async function connectToDatabase() {
-  if (cached.conn) {
-    return cached.conn;
+  if (isConnected && mongoose.connection.readyState === 1) {
+    return mongoose.connection;
   }
 
-  if (!cached.promise) {
-    cached.promise = mongoose.connect(MONGODB_URI, {
-      serverSelectionTimeoutMS: 5000,
-      bufferCommands: false
-    }).then((m) => m);
-  }
+  const db = await mongoose.connect(MONGODB_URI, {
+    serverSelectionTimeoutMS: 10000,
+    connectTimeoutMS: 10000,
+    socketTimeoutMS: 20000
+  });
 
-  try {
-    cached.conn = await cached.promise;
-  } catch (e) {
-    cached.promise = null;
-    throw e;
-  }
-
-  return cached.conn;
+  isConnected = db.connections[0].readyState === 1;
+  return db;
 }
 
 const userSchema = new mongoose.Schema({
