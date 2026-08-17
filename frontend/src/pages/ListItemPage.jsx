@@ -29,39 +29,39 @@ export const ListItemPage = () => {
   // ROLE RESTRICTION CHECK
   const isConsumerOnly = user && user.role === 'Consumer / Buyer';
 
-  // Form Fields
+  // Form Fields - Clean with ZERO default placeholder values
   const [title, setTitle] = useState('');
-  const [category, setCategory] = useState('Cameras');
+  const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
-  const [marketValue, setMarketValue] = useState(40000);
-  const [age, setAge] = useState('1 year');
-  const [condition, setCondition] = useState('Good');
-  const [accessories, setAccessories] = useState('Battery, charger, protective case');
+  const [marketValue, setMarketValue] = useState('');
+  const [age, setAge] = useState('');
+  const [condition, setCondition] = useState('');
+  const [accessories, setAccessories] = useState('');
   
-  // Location & Exact GPS Coordinates
-  const [location, setLocation] = useState('SRKR College Road, Bhimavaram, AP');
-  const [latitude, setLatitude] = useState(16.5449);
-  const [longitude, setLongitude] = useState(81.5212);
+  // Location & Exact GPS Coordinates - Empty until owner enters or clicks auto-detect
+  const [location, setLocation] = useState('');
+  const [latitude, setLatitude] = useState('');
+  const [longitude, setLongitude] = useState('');
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
   const [gpsCaptured, setGpsCaptured] = useState(false);
 
-  // Rates & Deposit
-  const [dailyRent, setDailyRent] = useState(800);
-  const [deposit, setDeposit] = useState(4000);
+  // Rates & Deposit - Empty until entered or calculated
+  const [dailyRent, setDailyRent] = useState('');
+  const [deposit, setDeposit] = useState('');
   const [useSuggestedPrice, setUseSuggestedPrice] = useState(true);
 
-  // Photo Upload & URL State
+  // Photo Upload & URL State - ZERO default images
   const [selectedFile, setSelectedFile] = useState(null);
-  const [imagePreview, setImagePreview] = useState('https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=1200&q=80');
+  const [imagePreview, setImagePreview] = useState('');
   const [imageUrlInput, setImageUrlInput] = useState('');
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // SMART PRICING ALGORITHM LOGIC
+  // SMART PRICING ALGORITHM LOGIC (Only runs when owner inputs market value)
   useEffect(() => {
-    if (!useSuggestedPrice || !marketValue) return;
+    if (!useSuggestedPrice || !marketValue || Number(marketValue) <= 0) return;
 
-    let baseDaily = marketValue * 0.02;
+    let baseDaily = Number(marketValue) * 0.02;
 
     if (condition === 'Brand New') baseDaily *= 1.25;
     else if (condition === 'Like New') baseDaily *= 1.15;
@@ -72,7 +72,7 @@ export const ListItemPage = () => {
     const calculatedDaily = Math.max(50, Math.round(baseDaily / 50) * 50);
     setDailyRent(calculatedDaily);
 
-    const calculatedDeposit = Math.round((marketValue * 0.1) / 100) * 100;
+    const calculatedDeposit = Math.round((Number(marketValue) * 0.1) / 100) * 100;
     setDeposit(Math.max(500, calculatedDeposit));
   }, [marketValue, condition, useSuggestedPrice]);
 
@@ -97,7 +97,7 @@ export const ListItemPage = () => {
           setLocation(place);
           toast.success('📍 Exact GPS coordinates captured from your device!');
         } catch (e) {
-          setLocation('Bhimavaram GPS Verified Zone');
+          setLocation('Bhimavaram, Andhra Pradesh');
           toast.success('📍 Device GPS coordinates successfully locked!');
         } finally {
           setIsDetectingLocation(false);
@@ -105,7 +105,7 @@ export const ListItemPage = () => {
       },
       (err) => {
         setIsDetectingLocation(false);
-        toast.error('Location access denied. Please allow GPS access in your browser.');
+        toast.error('Location access denied. Please allow GPS access in your browser or type address manually.');
       },
       { enableHighAccuracy: true, timeout: 10000 }
     );
@@ -117,7 +117,7 @@ export const ListItemPage = () => {
       setSelectedFile(file);
       const previewUrl = URL.createObjectURL(file);
       setImagePreview(previewUrl);
-      toast.success('Product photo loaded for upload!');
+      toast.success('Product photo loaded!');
     }
   };
 
@@ -149,10 +149,40 @@ export const ListItemPage = () => {
       return;
     }
 
+    if (!category) {
+      toast.error('Please select a product category');
+      return;
+    }
+
+    if (!condition) {
+      toast.error('Please select product condition');
+      return;
+    }
+
+    if (!dailyRent || Number(dailyRent) <= 0) {
+      toast.error('Please enter a valid daily rental rate');
+      return;
+    }
+
+    if (!deposit || Number(deposit) <= 0) {
+      toast.error('Please enter a refundable security deposit');
+      return;
+    }
+
+    if (!location.trim()) {
+      toast.error('Please enter your pickup location address');
+      return;
+    }
+
+    if (!imagePreview) {
+      toast.error('Please upload at least one photo of your equipment');
+      return;
+    }
+
     setIsSubmitting(true);
 
-    const finalImage = imagePreview || 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=1200&q=80';
-    const featuresArr = accessories
+    const finalImage = imagePreview;
+    const featuresArr = accessories && accessories.trim()
       ? accessories.split(',').map(f => f.trim())
       : ['Original Accessories', 'Tested & Verified', 'Local Pickup Available'];
 
@@ -160,11 +190,11 @@ export const ListItemPage = () => {
       const newItem = addListing({
         title,
         category,
-        description: description || `${title} in ${condition} condition. Original value ₹${marketValue}. Includes ${accessories}.`,
+        description: description || `${title} in ${condition} condition. Original value ₹${marketValue || 0}. Includes ${accessories || 'standard accessories'}.`,
         dailyRent: Number(dailyRent),
         threeDayRent: Math.round(Number(dailyRent) * 0.93),
         sevenDayRent: Math.round(Number(dailyRent) * 0.875),
-        marketValue: Number(marketValue),
+        marketValue: Number(marketValue) || (Number(dailyRent) * 50),
         deposit: Number(deposit),
         condition,
         features: featuresArr,
@@ -241,7 +271,7 @@ export const ListItemPage = () => {
             Enable Seller Account to Post Items
           </h1>
           <p className="text-sm text-slate-500 max-w-md mx-auto">
-            You are logged in as <strong>{user.name}</strong> ({user.email}) with role <strong>Consumer / Buyer</strong>. Click below to upgrade your account to list products.
+            You are logged in as <strong>{user?.name || 'User'}</strong> ({user?.email || ''}) with role <strong>Consumer / Buyer</strong>. Click below to upgrade your account to list products.
           </p>
         </div>
 
@@ -278,7 +308,7 @@ export const ListItemPage = () => {
       {/* Back button */}
       <button
         onClick={() => navigate(-1)}
-        className="inline-flex items-center gap-2 text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-blue-600 transition"
+        className="inline-flex items-center gap-2 text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-blue-600 transition cursor-pointer"
       >
         <ArrowLeft className="w-4 h-4" />
         Back to Marketplace
@@ -288,13 +318,13 @@ export const ListItemPage = () => {
       <div className="space-y-2">
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-xs font-bold">
           <Sparkles className="w-3.5 h-3.5 text-amber-500 fill-current" />
-          Owner Product Portal ({user.name})
+          Owner Product Portal ({user?.name || 'Owner'})
         </div>
         <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
           List Your Item for Rent
         </h1>
         <p className="text-slate-500 text-sm max-w-2xl">
-          List your equipment with exact GPS location mapping. Our smart pricing engine recommends optimal daily rates based on market value and condition.
+          List your equipment with exact GPS location mapping. Enter your item specifications and pricing details below.
         </p>
       </div>
 
@@ -305,7 +335,7 @@ export const ListItemPage = () => {
         <div className="space-y-6">
           <h3 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2 pb-3 border-b border-slate-100 dark:border-slate-800">
             <Tag className="w-5 h-5 text-blue-500" />
-            1. Information Collected from Owner
+            1. Equipment Details
           </h3>
 
           <div className="space-y-2">
@@ -317,7 +347,7 @@ export const ListItemPage = () => {
               required
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g. Canon EOS R5 Mirrorless Camera Kit"
+              placeholder="e.g. Sony A7 IV Camera Kit, DJI Drone, Bosch Drill"
               className="w-full px-4 py-3 rounded-2xl bg-slate-100 dark:bg-slate-800 text-sm font-medium text-slate-900 dark:text-white placeholder-slate-400 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -328,10 +358,12 @@ export const ListItemPage = () => {
                 Item Category *
               </label>
               <select
+                required
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
                 className="w-full px-4 py-3 rounded-2xl bg-slate-100 dark:bg-slate-800 text-sm font-medium text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-blue-500 cursor-pointer"
               >
+                <option value="">-- Select Category --</option>
                 {categories.filter(c => c.id !== 'all').map(cat => (
                   <option key={cat.id} value={cat.name}>{cat.name}</option>
                 ))}
@@ -347,10 +379,10 @@ export const ListItemPage = () => {
                 <input
                   type="number"
                   required
-                  min="500"
+                  min="100"
                   value={marketValue}
-                  onChange={(e) => setMarketValue(Number(e.target.value))}
-                  placeholder="40000"
+                  onChange={(e) => setMarketValue(e.target.value ? Number(e.target.value) : '')}
+                  placeholder="e.g. 50000"
                   className="w-full pl-8 pr-4 py-3 rounded-2xl bg-slate-100 dark:bg-slate-800 text-sm font-bold text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -364,7 +396,7 @@ export const ListItemPage = () => {
                 type="text"
                 value={age}
                 onChange={(e) => setAge(e.target.value)}
-                placeholder="e.g. 1 year"
+                placeholder="e.g. 6 months, 1 year"
                 className="w-full px-4 py-3 rounded-2xl bg-slate-100 dark:bg-slate-800 text-sm font-medium text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -376,13 +408,17 @@ export const ListItemPage = () => {
                 Product Condition *
               </label>
               <select
+                required
                 value={condition}
                 onChange={(e) => setCondition(e.target.value)}
                 className="w-full px-4 py-3 rounded-2xl bg-slate-100 dark:bg-slate-800 text-sm font-medium text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-blue-500 cursor-pointer"
               >
-                <option value="Excellent">Excellent (Like New, 0 cosmetic marks)</option>
-                <option value="Good">Good (Minor normal wear, 100% functional)</option>
-                <option value="Fair">Fair (Noticeable wear, fully tested)</option>
+                <option value="">-- Select Product Condition --</option>
+                <option value="Brand New">Brand New (Sealed / Unused)</option>
+                <option value="Like New">Like New (Pristine, 0 marks)</option>
+                <option value="Excellent">Excellent (Minimal signs of use)</option>
+                <option value="Good">Good (Normal cosmetic wear, 100% functional)</option>
+                <option value="Fair">Fair (Noticeable cosmetic wear, fully tested)</option>
               </select>
             </div>
 
@@ -394,7 +430,7 @@ export const ListItemPage = () => {
                 type="text"
                 value={accessories}
                 onChange={(e) => setAccessories(e.target.value)}
-                placeholder="e.g. 2 Batteries, 128GB SD card, bag"
+                placeholder="e.g. 2 Batteries, 128GB SD card, charger, case"
                 className="w-full px-4 py-3 rounded-2xl bg-slate-100 dark:bg-slate-800 text-sm font-medium text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -408,7 +444,7 @@ export const ListItemPage = () => {
               rows={3}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Describe your equipment features, performance, and rental terms..."
+              placeholder="Describe your equipment features, performance, and rental pickup terms..."
               className="w-full px-4 py-3 rounded-2xl bg-slate-100 dark:bg-slate-800 text-sm font-medium text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -419,36 +455,44 @@ export const ListItemPage = () => {
           <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
             <h3 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Calculator className="w-5 h-5 text-emerald-500" />
-              2. Smart Rental Rates & Security Deposit
+              2. Rental Rates & Security Deposit
             </h3>
-            <span className="text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-800">
-              Smart Algorithm
-            </span>
+            {marketValue && condition && (
+              <span className="text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-800">
+                Smart Pricing Applied
+              </span>
+            )}
           </div>
 
-          <div className="p-5 rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 space-y-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-bold text-slate-800 dark:text-slate-200">Recommended Daily Rate</p>
-                <p className="text-[11px] text-slate-500">Based on ₹{marketValue} value and {condition} condition</p>
+          {marketValue && condition ? (
+            <div className="p-5 rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-bold text-slate-800 dark:text-slate-200">Recommended Daily Rate</p>
+                  <p className="text-[11px] text-slate-500">Based on ₹{marketValue} market value and {condition} condition</p>
+                </div>
+                <div className="text-right">
+                  <span className="text-2xl font-black text-emerald-600 dark:text-emerald-400">₹{dailyRent || 0}</span>
+                  <span className="text-xs text-slate-500"> / day</span>
+                </div>
               </div>
-              <div className="text-right">
-                <span className="text-2xl font-black text-emerald-600 dark:text-emerald-400">₹{dailyRent}</span>
-                <span className="text-xs text-slate-500"> / day</span>
+              
+              <div className="grid grid-cols-2 gap-3 pt-2 text-xs">
+                <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-800 flex justify-between">
+                  <span className="text-slate-500">3+ Days Rate:</span>
+                  <span className="font-bold text-slate-900 dark:text-white">₹{Math.round((Number(dailyRent) || 0) * 0.93)}/day</span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-800 flex justify-between">
+                  <span className="text-slate-500">7+ Days Rate:</span>
+                  <span className="font-bold text-slate-900 dark:text-white">₹{Math.round((Number(dailyRent) || 0) * 0.875)}/day</span>
+                </div>
               </div>
             </div>
-            
-            <div className="grid grid-cols-2 gap-3 pt-2 text-xs">
-              <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-800 flex justify-between">
-                <span className="text-slate-500">3+ Days Rate:</span>
-                <span className="font-bold text-slate-900 dark:text-white">₹{Math.round(dailyRent * 0.93)}/day</span>
-              </div>
-              <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-800 flex justify-between">
-                <span className="text-slate-500">7+ Days Rate:</span>
-                <span className="font-bold text-slate-900 dark:text-white">₹{Math.round(dailyRent * 0.875)}/day</span>
-              </div>
+          ) : (
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 text-xs text-slate-500 text-center">
+              💡 Enter your equipment's <strong>Market Value</strong> and <strong>Condition</strong> above to calculate recommended rates.
             </div>
-          </div>
+          )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -460,8 +504,10 @@ export const ListItemPage = () => {
                 <input
                   type="number"
                   required
+                  min="10"
                   value={dailyRent}
-                  onChange={(e) => setDailyRent(Number(e.target.value))}
+                  onChange={(e) => setDailyRent(e.target.value ? Number(e.target.value) : '')}
+                  placeholder="e.g. 650"
                   className="w-full pl-8 pr-4 py-3 rounded-2xl bg-slate-100 dark:bg-slate-800 text-sm font-bold text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -476,8 +522,10 @@ export const ListItemPage = () => {
                 <input
                   type="number"
                   required
+                  min="100"
                   value={deposit}
-                  onChange={(e) => setDeposit(Number(e.target.value))}
+                  onChange={(e) => setDeposit(e.target.value ? Number(e.target.value) : '')}
+                  placeholder="e.g. 3000"
                   className="w-full pl-8 pr-4 py-3 rounded-2xl bg-slate-100 dark:bg-slate-800 text-sm font-bold text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -495,7 +543,7 @@ export const ListItemPage = () => {
           {/* Photo Upload */}
           <div className="space-y-3">
             <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-              Upload Product Photo
+              Upload Product Photo *
             </label>
             
             <div className="p-6 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-3xl text-center bg-slate-50/50 dark:bg-slate-800/40 hover:bg-slate-100/80 transition cursor-pointer relative group">
@@ -517,7 +565,17 @@ export const ListItemPage = () => {
             </div>
 
             {imagePreview && (
-              <div className="space-y-1">
+              <div className="space-y-2 pt-2">
+                <div className="flex items-center justify-between text-xs text-slate-500">
+                  <span className="font-bold text-emerald-600">✓ Uploaded Image Preview:</span>
+                  <button
+                    type="button"
+                    onClick={() => setImagePreview('')}
+                    className="text-rose-500 hover:underline font-bold cursor-pointer"
+                  >
+                    Remove Photo
+                  </button>
+                </div>
                 <img
                   src={imagePreview}
                   alt="Product Preview"
@@ -587,7 +645,8 @@ export const ListItemPage = () => {
                   step="0.0001"
                   required
                   value={latitude}
-                  onChange={(e) => setLatitude(Number(e.target.value))}
+                  onChange={(e) => setLatitude(e.target.value ? Number(e.target.value) : '')}
+                  placeholder="e.g. 16.5449"
                   className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 text-xs font-bold text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700"
                 />
               </div>
@@ -601,7 +660,8 @@ export const ListItemPage = () => {
                   step="0.0001"
                   required
                   value={longitude}
-                  onChange={(e) => setLongitude(Number(e.target.value))}
+                  onChange={(e) => setLongitude(e.target.value ? Number(e.target.value) : '')}
+                  placeholder="e.g. 81.5212"
                   className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 text-xs font-bold text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700"
                 />
               </div>
