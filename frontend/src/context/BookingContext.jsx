@@ -13,36 +13,37 @@ const STORAGE_KEYS = {
   WEBSITE_FEEDBACKS: 'borrowbridge_website_feedbacks_v2'
 };
 
+const mergeCustomAndBase = (customList, baseList = sampleItems) => {
+  const baseIds = new Set(baseList.map(s => s.id));
+  const onlyCustom = (customList || []).filter(c => c && c.id && !baseIds.has(c.id));
+  const uniqueMap = new Map();
+  onlyCustom.forEach(c => {
+    if (!uniqueMap.has(c.id)) {
+      uniqueMap.set(c.id, c);
+    }
+  });
+  return [...Array.from(uniqueMap.values()), ...baseList];
+};
+
 export const BookingProvider = ({ children }) => {
   // 1. Items with localStorage persistence and base items merging
   const [items, setItems] = useState(() => {
     try {
       const savedItems = localStorage.getItem(STORAGE_KEYS.ITEMS);
       const savedMyListings = localStorage.getItem(STORAGE_KEYS.MY_LISTINGS);
-      let loadedItems = [];
+      let list = [];
 
       if (savedItems) {
         const parsed = JSON.parse(savedItems);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          loadedItems = parsed;
-        }
+        if (Array.isArray(parsed)) list.push(...parsed);
       }
 
-      // Also merge any items from myListings that might be missing from items
       if (savedMyListings) {
         const parsedListings = JSON.parse(savedMyListings);
-        if (Array.isArray(parsedListings) && parsedListings.length > 0) {
-          const loadedIds = new Set(loadedItems.map(i => i.id));
-          const missing = parsedListings.filter(l => l && l.id && !loadedIds.has(l.id));
-          loadedItems = [...missing, ...loadedItems];
-        }
+        if (Array.isArray(parsedListings)) list.push(...parsedListings);
       }
 
-      if (loadedItems.length > 0) {
-        const baseIds = new Set(sampleItems.map(s => s.id));
-        const customItems = loadedItems.filter(i => !baseIds.has(i.id));
-        return [...customItems, ...sampleItems];
-      }
+      return mergeCustomAndBase(list);
     } catch (e) {
       console.error('Error loading items from localStorage', e);
     }
@@ -233,20 +234,16 @@ export const BookingProvider = ({ children }) => {
     ];
   });
 
-  // Fetch live cloud items from MongoDB API on startup
+  // Fetch live cloud items from MongoDB API on startup and poll every 8 seconds
   useEffect(() => {
     const fetchCloudItems = async () => {
       try {
         const res = await fetch('/api/items');
         if (res.ok) {
           const json = await res.json();
-          if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+          if (json.success && Array.isArray(json.data)) {
             setItems(prev => {
-              const cloudItems = json.data;
-              const cloudIds = new Set(cloudItems.map(c => c.id));
-              // Merge any local-only custom items that might not have reached server yet
-              const localCustom = prev.filter(p => !cloudIds.has(p.id) && p.id.startsWith('item-17'));
-              const merged = [...localCustom, ...cloudItems];
+              const merged = mergeCustomAndBase([...json.data, ...prev]);
               try {
                 localStorage.setItem(STORAGE_KEYS.ITEMS, JSON.stringify(merged));
               } catch (e) {}
@@ -255,11 +252,13 @@ export const BookingProvider = ({ children }) => {
           }
         }
       } catch (err) {
-        // Fallback to cached items
+        // Offline / fallback to local cache
       }
     };
 
     fetchCloudItems();
+    const interval = setInterval(fetchCloudItems, 8000);
+    return () => clearInterval(interval);
   }, []);
 
   // Real-time synchronization across browser tabs/windows

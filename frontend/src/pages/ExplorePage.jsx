@@ -28,8 +28,7 @@ export const ExplorePage = () => {
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
   const [selectedCity, setSelectedCity] = useState('Bhimavaram');
-  const [userCoords, setUserCoords] = useState([16.5449, 81.5212]);
-  const [maxDistanceKm, setMaxDistanceKm] = useState(5); // Capped strictly up to 5km max!
+  const [maxDistanceKm, setMaxDistanceKm] = useState(25);
   const [sortBy, setSortBy] = useState('latest');
   const [viewMode, setViewMode] = useState('grid');
   const [isLocating, setIsLocating] = useState(false);
