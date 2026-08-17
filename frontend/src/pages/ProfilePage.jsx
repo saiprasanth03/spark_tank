@@ -465,6 +465,40 @@ export const ProfilePage = () => {
                       </div>
                     </div>
 
+                    {/* Renter ID Proof Display (Only Visible to Owner) */}
+                    {!isRenterView && bk.renterAadhar && (
+                      <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center flex-shrink-0">
+                            <ShieldCheck className="w-5 h-5 text-emerald-600" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-extrabold text-slate-900 dark:text-white">Renter ID Verified</p>
+                            <p className="text-xs text-emerald-700 dark:text-emerald-400 font-bold tracking-widest mt-0.5">
+                              {bk.renterAadhar.replace(/(\d{4})/g, '$1 ').trim()}
+                            </p>
+                          </div>
+                        </div>
+                        {bk.renterIdProof && (
+                          <div className="flex-shrink-0 relative group">
+                            <p className="text-[10px] text-emerald-600 font-bold mb-1 text-right">Hover to View Image</p>
+                            <img 
+                              src={bk.renterIdProof} 
+                              alt="Aadhar ID Proof" 
+                              className="w-20 h-12 object-cover rounded-lg border border-emerald-300 dark:border-emerald-700 shadow-sm cursor-crosshair relative z-10"
+                            />
+                            <div className="absolute top-0 right-full mr-4 hidden group-hover:block z-50 drop-shadow-2xl">
+                              <img 
+                                src={bk.renterIdProof} 
+                                alt="Aadhar ID Proof Enlarged" 
+                                className="w-[300px] object-contain rounded-xl border-4 border-white dark:border-slate-800"
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                     {/* Stepper Progress Bar */}
                     <div className="space-y-2">
                       <div className="grid grid-cols-5 gap-2 text-center text-[11px] font-bold">
