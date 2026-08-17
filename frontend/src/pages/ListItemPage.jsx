@@ -19,7 +19,9 @@ import {
   Mail,
   Compass,
   Navigation,
-  X
+  X,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -760,10 +762,46 @@ export const ListItemPage = () => {
                   {additionalImages.map((img, idx) => (
                     <div key={idx} className="relative w-20 h-20 flex-shrink-0">
                       <img src={img} alt={`Additional ${idx}`} className="w-full h-full object-cover rounded-xl shadow-sm border border-slate-200 dark:border-slate-700" />
+                      
+                      {/* Move Left Button */}
+                      {idx > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAdditionalImages(prev => {
+                              const newArr = [...prev];
+                              [newArr[idx - 1], newArr[idx]] = [newArr[idx], newArr[idx - 1]];
+                              return newArr;
+                            });
+                          }}
+                          className="absolute bottom-1 left-1 bg-slate-900/80 text-white rounded p-1 shadow-md hover:bg-slate-800 transition"
+                        >
+                          <ChevronLeft className="w-3 h-3" />
+                        </button>
+                      )}
+
+                      {/* Move Right Button */}
+                      {idx < additionalImages.length - 1 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAdditionalImages(prev => {
+                              const newArr = [...prev];
+                              [newArr[idx], newArr[idx + 1]] = [newArr[idx + 1], newArr[idx]];
+                              return newArr;
+                            });
+                          }}
+                          className="absolute bottom-1 right-1 bg-slate-900/80 text-white rounded p-1 shadow-md hover:bg-slate-800 transition"
+                        >
+                          <ChevronRight className="w-3 h-3" />
+                        </button>
+                      )}
+
+                      {/* Remove Button */}
                       <button
                         type="button"
                         onClick={() => setAdditionalImages(prev => prev.filter((_, i) => i !== idx))}
-                        className="absolute -top-2 -right-2 bg-rose-500 text-white rounded-full p-1 shadow-md hover:bg-rose-600"
+                        className="absolute -top-2 -right-2 bg-rose-500 text-white rounded-full p-1 shadow-md hover:bg-rose-600 transition"
                       >
                         <X className="w-3 h-3" />
                       </button>
