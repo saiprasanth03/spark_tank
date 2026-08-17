@@ -27,13 +27,14 @@ export const ExplorePage = () => {
   // Filter States
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
-  const [selectedCity, setSelectedCity] = useState('Bhimavaram');
-  const [maxDistanceKm, setMaxDistanceKm] = useState(25);
+  const [selectedCity, setSelectedCity] = useState('Bhimavaram & Nearby');
+  const [userCoords, setUserCoords] = useState([16.5449, 81.5212]);
+  const [maxDistanceKm, setMaxDistanceKm] = useState(50);
   const [sortBy, setSortBy] = useState('latest');
   const [viewMode, setViewMode] = useState('grid');
   const [isLocating, setIsLocating] = useState(false);
 
-  const cities = ['Bhimavaram', 'Visakhapatnam', 'Vijayawada', 'Hyderabad', 'Kakinada', 'Rajahmundry'];
+  const cities = ['All Locations', 'Bhimavaram', 'Visakhapatnam', 'Vijayawada', 'Hyderabad', 'Kakinada', 'Rajahmundry'];
 
   const categoryIcons = {
     all: '✨',

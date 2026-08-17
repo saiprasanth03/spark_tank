@@ -156,53 +156,14 @@ export const BookingProvider = ({ children }) => {
     ];
   });
 
-  // 6. Product Reviews Store with localStorage persistence
+  // 6. Product Reviews Store with localStorage persistence (Authentic User-Submitted Reviews Only)
   const [productReviews, setProductReviews] = useState(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.PRODUCT_REVIEWS);
       if (saved) return JSON.parse(saved);
     } catch (e) {}
 
-    return {
-      'item-1': [
-        {
-          id: 'rev-1',
-          reviewer: 'Ananya Rao',
-          rating: 5,
-          date: 'Aug 12, 2026',
-          comment: 'Rented this Canon EOS R5 for a wedding shoot at Bhimavaram. Lens was crystal clear, batteries fully charged, and the owner was very cooperative!',
-          verifiedBookingId: 'bk-99'
-        },
-        {
-          id: 'rev-2',
-          reviewer: 'Sai Teja',
-          rating: 5,
-          date: 'Aug 5, 2026',
-          comment: 'Top quality 8K footage. Handover inspection was smooth near SRKR campus road and full deposit was refunded instantly after return.',
-          verifiedBookingId: 'bk-98'
-        }
-      ],
-      'item-2': [
-        {
-          id: 'rev-3',
-          reviewer: 'Karthik Varma',
-          rating: 5,
-          date: 'Aug 9, 2026',
-          comment: 'Blazing fast M3 Max. Rendered our entire 4K project in 20 minutes. Battery and charger in perfect condition.',
-          verifiedBookingId: 'bk-97'
-        }
-      ],
-      'item-11': [
-        {
-          id: 'rev-4',
-          reviewer: 'Naveen Kumar',
-          rating: 5,
-          date: 'Aug 11, 2026',
-          comment: 'Complete GATE engineering book bundle. Books are in pristine condition with 0 markings. Saved thousands of rupees!',
-          verifiedBookingId: 'bk-96'
-        }
-      ]
-    };
+    return {};
   });
 
   // 7. Website Feedbacks Store with localStorage persistence

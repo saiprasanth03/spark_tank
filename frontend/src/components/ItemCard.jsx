@@ -17,7 +17,17 @@ export const ItemCard = ({ item }) => {
   const canDelete = isAdmin || isOwner;
 
   const distanceText = item.distanceKm ? `${item.distanceKm} km away` : `${item.distance || 0.8} km away`;
-  const locationCity = item.location?.city || 'Bhimavaram';
+  const locationCity = (() => {
+    if (item.location?.city && item.location.city !== 'Bhimavaram') return item.location.city;
+    if (item.location?.address) {
+      const parts = item.location.address.split(',').map(s => s.trim());
+      const matched = parts.find(p => /visakhapatnam|vizag|bhimavaram|hyderabad|vijayawada|kakinada|rajahmundry|guntur|tirupati|bengaluru/i.test(p));
+      if (matched) return matched;
+      if (parts.length >= 3) return parts[parts.length - 3] || parts[1];
+      return parts[0];
+    }
+    return item.location?.city || 'Local Area';
+  })();
 
   const handleDelete = (e) => {
     e.preventDefault();

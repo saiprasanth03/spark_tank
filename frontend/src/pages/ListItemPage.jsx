@@ -187,6 +187,20 @@ export const ListItemPage = () => {
       : ['Original Accessories', 'Tested & Verified', 'Local Pickup Available'];
 
     setTimeout(() => {
+      // Dynamic City Extraction from Address
+      let detectedCity = 'Bhimavaram';
+      if (location) {
+        const parts = location.split(',').map(s => s.trim());
+        const matched = parts.find(p => /visakhapatnam|vizag|bhimavaram|hyderabad|vijayawada|kakinada|rajahmundry|guntur|tirupati/i.test(p));
+        if (matched) {
+          detectedCity = matched;
+        } else if (parts.length >= 3) {
+          detectedCity = parts[parts.length - 3] || parts[1] || 'Bhimavaram';
+        } else if (parts.length > 0) {
+          detectedCity = parts[0];
+        }
+      }
+
       const newItem = addListing({
         title,
         category,
@@ -203,7 +217,7 @@ export const ListItemPage = () => {
         ownerPhone: user.phone || '+91 98765 43210',
         ownerEmail: user.email,
         location: {
-          city: 'Bhimavaram',
+          city: detectedCity,
           address: location,
           lat: Number(latitude) || 16.5449,
           lng: Number(longitude) || 81.5212
@@ -211,9 +225,105 @@ export const ListItemPage = () => {
       });
 
       setIsSubmitting(false);
-      navigate(`/item/${newItem.id}`);
-    }, 800);
+      setCreatedProduct(newItem);
+      toast.success('🎉 Equipment listed successfully!');
+    }, 600);
   };
+
+  // SUCCESS CONFIRMATION SCREEN AFTER ADDING PRODUCT
+  if (createdProduct) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-12 space-y-8 animate-in zoom-in-95 duration-300">
+        <div className="glass-card p-8 sm:p-10 rounded-3xl border border-emerald-200 dark:border-emerald-800 shadow-2xl text-center space-y-6 bg-gradient-to-b from-emerald-50/40 via-white to-white dark:from-emerald-950/20 dark:via-slate-900 dark:to-slate-900">
+          
+          <div className="w-20 h-20 mx-auto rounded-3xl bg-emerald-100 dark:bg-emerald-900/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shadow-lg border border-emerald-300 dark:border-emerald-700">
+            <CheckCircle2 className="w-10 h-10" />
+          </div>
+
+          <div className="space-y-2">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-xs font-bold">
+              <Sparkles className="w-3.5 h-3.5 fill-current text-amber-500" />
+              Live on Marketplace
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+              Product Added Successfully!
+            </h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+              Your equipment <strong>"{createdProduct.title}"</strong> is now live on the marketplace and discoverable by renters in <strong>{createdProduct.location?.city || 'your area'}</strong>.
+            </p>
+          </div>
+
+          {/* Product Summary Card */}
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex items-center gap-4 text-left">
+            <img
+              src={createdProduct.images?.[0]}
+              alt={createdProduct.title}
+              className="w-20 h-20 rounded-xl object-cover border border-slate-200 dark:border-slate-700"
+            />
+            <div className="space-y-1 flex-1">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 dark:bg-blue-950 px-2 py-0.5 rounded-md">
+                {createdProduct.category}
+              </span>
+              <h4 className="font-extrabold text-slate-900 dark:text-white text-sm line-clamp-1">
+                {createdProduct.title}
+              </h4>
+              <div className="flex items-center justify-between text-xs pt-1">
+                <span className="font-black text-blue-600 dark:text-blue-400">₹{createdProduct.dailyRent} / day</span>
+                <span className="text-slate-500 font-medium">Deposit: ₹{createdProduct.deposit}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Action CTAs */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+            <button
+              onClick={() => navigate('/')}
+              className="w-full py-3.5 px-4 rounded-2xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 font-extrabold text-sm shadow-md hover:opacity-90 transition flex items-center justify-center gap-2 cursor-pointer"
+            >
+              🏠 Go to Home Page
+            </button>
+
+            <button
+              onClick={() => navigate('/explore')}
+              className="w-full py-3.5 px-4 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-sm shadow-md transition flex items-center justify-center gap-2 cursor-pointer"
+            >
+              🔍 View in Marketplace
+            </button>
+
+            <button
+              onClick={() => navigate(`/item/${createdProduct.id}`)}
+              className="w-full py-3.5 px-4 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-sm transition flex items-center justify-center gap-2 cursor-pointer"
+            >
+              📋 View Listing Page
+            </button>
+
+            <button
+              onClick={() => {
+                setCreatedProduct(null);
+                setTitle('');
+                setCategory('');
+                setDescription('');
+                setMarketValue('');
+                setAge('');
+                setCondition('');
+                setAccessories('');
+                setLocation('');
+                setLatitude('');
+                setLongitude('');
+                setDailyRent('');
+                setDeposit('');
+                setImagePreview('');
+              }}
+              className="w-full py-3.5 px-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 text-emerald-700 dark:text-emerald-300 font-bold text-sm transition flex items-center justify-center gap-2 cursor-pointer border border-emerald-200 dark:border-emerald-800"
+            >
+              ➕ List Another Item
+            </button>
+          </div>
+
+        </div>
+      </div>
+    );
+  }
 
   // 1. GUEST AUTHENTICATION GUARD (Cannot list without logging in)
   if (!isAuthenticated || !user) {

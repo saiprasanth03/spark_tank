@@ -37,6 +37,7 @@ export const AdminPage = () => {
     items, 
     myBookings, 
     allUsers, 
+    websiteFeedbacks,
     updateItem, 
     deleteItem, 
     clearTestListings,
@@ -128,7 +129,7 @@ export const AdminPage = () => {
             Full Admin Control & Escrow Governance Portal
           </h1>
           <p className="text-slate-300 text-sm mt-1">
-            Modify any product listing, manage user credentials & roles, resolve escrow deposit claims, and configure system rules.
+            Full website access: modify listings, manage user credentials & roles, resolve escrow claims, and review website feedbacks.
           </p>
         </div>
 
@@ -148,7 +149,7 @@ export const AdminPage = () => {
         <div className="glass-card p-6 rounded-3xl space-y-2 border border-slate-200/80 dark:border-slate-800">
           <div className="flex items-center justify-between text-slate-500">
             <span className="text-xs font-extrabold uppercase tracking-wider">Total Volume</span>
-            <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600">
+            <div className="p-2 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600">
               <IndianRupee className="w-5 h-5" />
             </div>
           </div>
@@ -156,23 +157,22 @@ export const AdminPage = () => {
             ₹{totalVolume.toLocaleString()}
           </h3>
           <p className="text-xs text-emerald-600 font-bold flex items-center gap-1">
-            <TrendingUp className="w-3.5 h-3.5" />
-            +18.4% growth this month
+            <TrendingUp className="w-3.5 h-3.5" /> +18.4% this month
           </p>
         </div>
 
         <div className="glass-card p-6 rounded-3xl space-y-2 border border-slate-200/80 dark:border-slate-800">
           <div className="flex items-center justify-between text-slate-500">
-            <span className="text-xs font-extrabold uppercase tracking-wider">Active Listings</span>
-            <div className="p-2 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600">
+            <span className="text-xs font-extrabold uppercase tracking-wider">Live Inventory</span>
+            <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600">
               <Package className="w-5 h-5" />
             </div>
           </div>
           <h3 className="text-3xl font-extrabold text-slate-900 dark:text-white">
             {totalListings}
           </h3>
-          <p className="text-xs text-blue-600 font-bold">
-            Full Admin Edit Controls Active
+          <p className="text-xs text-slate-500">
+            {userAddedCount} Custom Owner / {baseCatalogCount} Base Items
           </p>
         </div>
 
@@ -255,6 +255,18 @@ export const AdminPage = () => {
         >
           <Lock className="w-4 h-4" />
           Escrow & Bookings ({myBookings.length})
+        </button>
+
+        <button
+          onClick={() => setActiveTab('feedbacks')}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl text-sm font-extrabold transition-all whitespace-nowrap ${
+            activeTab === 'feedbacks'
+              ? 'bg-blue-600 text-white shadow-md'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+          }`}
+        >
+          <Bot className="w-4 h-4" />
+          Website Feedbacks ({websiteFeedbacks?.length || 0})
         </button>
 
         <button
@@ -647,6 +659,77 @@ export const AdminPage = () => {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* WEBSITE FEEDBACKS TAB PANEL (ONLY Platform / Website Feedbacks for Admin) */}
+      {activeTab === 'feedbacks' && (
+        <div className="space-y-6 animate-in fade-in duration-200">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h3 className="text-xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                <Bot className="w-5 h-5 text-blue-500" />
+                Website & Platform Feedbacks Portal
+              </h3>
+              <p className="text-xs text-slate-500">
+                Direct feedback and ratings submitted by users regarding website usability, escrow features, and bug reports.
+              </p>
+            </div>
+
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 text-xs font-bold border border-blue-200 dark:border-blue-800">
+              Total Feedbacks: {websiteFeedbacks?.length || 0}
+            </div>
+          </div>
+
+          {websiteFeedbacks && websiteFeedbacks.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {websiteFeedbacks.map((fb) => (
+                <div
+                  key={fb.id}
+                  className="glass-card p-6 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-md space-y-4"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 text-[11px] font-bold">
+                      {fb.category || 'General Feedback'}
+                    </span>
+                    <div className="flex items-center gap-1 text-amber-500 font-extrabold text-xs bg-amber-50 dark:bg-amber-950/60 px-2.5 py-1 rounded-xl">
+                      <Star className="w-3.5 h-3.5 fill-current" />
+                      {fb.rating}.0 / 5
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="font-extrabold text-slate-900 dark:text-white text-base">
+                      {fb.title || 'User Experience Feedback'}
+                    </h4>
+                    <p className="text-xs text-slate-600 dark:text-slate-300 mt-2 leading-relaxed italic bg-slate-50 dark:bg-slate-800/60 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-700">
+                      "{fb.comment || fb.description || fb.feedback || 'No comment text provided'}"
+                    </p>
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs text-slate-400 pt-2 border-t border-slate-100 dark:border-slate-800">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-[10px] flex items-center justify-center">
+                        {fb.submitterName ? fb.submitterName.charAt(0) : 'U'}
+                      </div>
+                      <span className="font-medium text-slate-700 dark:text-slate-300">
+                        {fb.submitterName || 'Community User'} {fb.email ? `(${fb.email})` : ''}
+                      </span>
+                    </div>
+                    <span>{fb.date || 'Recent'}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="p-12 text-center glass-card rounded-3xl border border-slate-200 dark:border-slate-800 space-y-2">
+              <Bot className="w-10 h-10 text-slate-400 mx-auto" />
+              <h4 className="font-extrabold text-slate-700 dark:text-slate-300">No Website Feedbacks Yet</h4>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                When users click the "Give Website Feedback" button in the bottom navigation or profile, their responses will display exclusively here for admins.
+              </p>
+            </div>
+          )}
         </div>
       )}
 
