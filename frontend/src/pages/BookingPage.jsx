@@ -69,6 +69,10 @@ export const BookingPage = () => {
 
   const handleSendBookingRequest = (e) => {
     e.preventDefault();
+    if (!idProofBase64) {
+      toast.error('Please upload your ID Proof to proceed.');
+      return;
+    }
     if (!agreedToTerms) {
       toast.error('Please accept the rental terms to proceed.');
       return;
@@ -250,10 +254,10 @@ export const BookingPage = () => {
               <div>
                 <h3 className="font-bold text-slate-900 dark:text-white text-lg flex items-center gap-2">
                   <ShieldCheck className="w-5 h-5 text-blue-500" />
-                  ID Verification (Optional)
+                  ID Verification (Required)
                 </h3>
                 <p className="text-xs text-slate-500 mt-1 font-semibold">
-                  Upload a valid ID proof (Aadhar/PAN) to instantly get a <span className="text-emerald-500 font-extrabold">50% discount</span> on the required security deposit!
+                  Upload a valid ID proof (Aadhar/PAN) to proceed with the booking and instantly get a <span className="text-emerald-500 font-extrabold">50% discount</span> on the required security deposit!
                 </p>
               </div>
             </div>
