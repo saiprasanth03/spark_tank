@@ -433,7 +433,7 @@ export const ListItemPage = () => {
                 <p className="text-[11px] text-slate-500">Based on ₹{marketValue} value and {condition} condition</p>
               </div>
               <div className="text-right">
-                <span className="text-2xl font-black text-emerald-600 dark:text-emerald-400">₹{suggestedDailyPrice}</span>
+                <span className="text-2xl font-black text-emerald-600 dark:text-emerald-400">₹{dailyRent}</span>
                 <span className="text-xs text-slate-500"> / day</span>
               </div>
             </div>
@@ -441,11 +441,11 @@ export const ListItemPage = () => {
             <div className="grid grid-cols-2 gap-3 pt-2 text-xs">
               <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-800 flex justify-between">
                 <span className="text-slate-500">3+ Days Rate:</span>
-                <span className="font-bold text-slate-900 dark:text-white">₹{threeDayRate}/day</span>
+                <span className="font-bold text-slate-900 dark:text-white">₹{Math.round(dailyRent * 0.93)}/day</span>
               </div>
               <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-800 flex justify-between">
                 <span className="text-slate-500">7+ Days Rate:</span>
-                <span className="font-bold text-slate-900 dark:text-white">₹{sevenDayRate}/day</span>
+                <span className="font-bold text-slate-900 dark:text-white">₹{Math.round(dailyRent * 0.875)}/day</span>
               </div>
             </div>
           </div>
@@ -543,7 +543,7 @@ export const ListItemPage = () => {
               {/* GPS Auto-Detect Button */}
               <button
                 type="button"
-                onClick={handleDetectOwnerGPS}
+                onClick={handleDetectGPS}
                 disabled={isDetectingLocation}
                 className="px-4 py-2.5 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 font-extrabold text-xs shadow-md hover:opacity-90 transition flex items-center gap-2 flex-shrink-0 cursor-pointer"
               >
