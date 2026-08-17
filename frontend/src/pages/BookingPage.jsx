@@ -37,6 +37,7 @@ export const BookingPage = () => {
   const [deliveryOption, setDeliveryOption] = useState('pickup');
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [idProofBase64, setIdProofBase64] = useState('');
+  const [aadharNumber, setAadharNumber] = useState('');
   const [hasViewedAgreement, setHasViewedAgreement] = useState(false);
   const [isAgreementModalOpen, setIsAgreementModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -69,8 +70,13 @@ export const BookingPage = () => {
 
   const handleSendBookingRequest = (e) => {
     e.preventDefault();
+    const cleanAadhar = aadharNumber.replace(/\s/g, '');
+    if (cleanAadhar.length !== 12 || isNaN(cleanAadhar)) {
+      toast.error('Please enter a valid 12-digit Aadhar number.');
+      return;
+    }
     if (!idProofBase64) {
-      toast.error('Please upload your ID Proof to proceed.');
+      toast.error('Please upload your Aadhar image proof to proceed.');
       return;
     }
     if (!agreedToTerms) {
@@ -95,6 +101,7 @@ export const BookingPage = () => {
         platformFee,
         totalPaid: estimatedTotal,
         renterIdProof: idProofBase64,
+        renterAadhar: cleanAadhar,
         pickupType: deliveryOption === 'pickup' ? 'Local Self-Pickup' : 'Doorstep Delivery',
         renterName: user?.name || 'Registered Renter',
         renterEmail: user?.email || 'renter@example.com',
@@ -251,14 +258,30 @@ export const BookingPage = () => {
           {/* ID Verification */}
           <div className="glass-card p-6 rounded-3xl space-y-4 border border-slate-200/80 dark:border-slate-800">
             <div className="flex items-start justify-between gap-4">
-              <div>
+              <div className="w-full">
                 <h3 className="font-bold text-slate-900 dark:text-white text-lg flex items-center gap-2">
                   <ShieldCheck className="w-5 h-5 text-blue-500" />
                   ID Verification (Required)
                 </h3>
                 <p className="text-xs text-slate-500 mt-1 font-semibold">
-                  Upload a valid ID proof (Aadhar/PAN) to proceed with the booking and instantly get a <span className="text-emerald-500 font-extrabold">50% discount</span> on the required security deposit!
+                  Enter your 12-digit Aadhar number and upload the image proof to proceed with the booking and instantly get a <span className="text-emerald-500 font-extrabold">50% discount</span> on the required security deposit!
                 </p>
+                <div className="mt-4">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Aadhar Number (12 Digits) *</label>
+                  <input
+                    type="text"
+                    maxLength={14}
+                    placeholder="XXXX XXXX XXXX"
+                    value={aadharNumber}
+                    onChange={(e) => {
+                      let val = e.target.value.replace(/\D/g, '');
+                      if (val.length > 12) val = val.slice(0, 12);
+                      val = val.replace(/(\d{4})/g, '$1 ').trim();
+                      setAadharNumber(val);
+                    }}
+                    className="w-full px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-sm font-semibold text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
               </div>
             </div>
 
