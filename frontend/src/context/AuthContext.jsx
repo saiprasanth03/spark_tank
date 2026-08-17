@@ -154,6 +154,14 @@ export const AuthProvider = ({ children }) => {
     toast.success('Logged out');
   };
 
+  const updateUserRole = (newRole) => {
+    if (!user) return;
+    const updated = { ...user, role: newRole };
+    setUser(updated);
+    setRegisteredUsers(prev => prev.map(u => u.id === user.id ? { ...u, role: newRole } : u));
+    toast.success(`Account role updated to ${newRole}!`);
+  };
+
   const isUserAdmin = isAdminEmail(user?.email);
 
   return (
@@ -164,6 +172,7 @@ export const AuthProvider = ({ children }) => {
       loginAsAdminEmail,
       register,
       logout,
+      updateUserRole,
       isAuthenticated: !!user,
       isAdmin: isUserAdmin,
       allowedAdminEmails: ALLOWED_ADMIN_EMAILS

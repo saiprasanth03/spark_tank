@@ -24,7 +24,7 @@ import toast from 'react-hot-toast';
 export const ListItemPage = () => {
   const navigate = useNavigate();
   const { addListing } = useBooking();
-  const { user } = useAuth();
+  const { user, isAuthenticated, updateUserRole } = useAuth();
 
   // ROLE RESTRICTION CHECK
   const isConsumerOnly = user && user.role === 'Consumer / Buyer';
@@ -58,110 +58,94 @@ export const ListItemPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // SMART PRICING ALGORITHM LOGIC
-  const calculatedBasePrice = Math.round((Number(marketValue) || 40000) * 0.02);
-  let conditionFactor = 1.0;
-  if (condition === 'Excellent') conditionFactor = 1.10;
-  if (condition === 'Fair') conditionFactor = 0.85;
-
-  const suggestedDailyPrice = Math.round(calculatedBasePrice * conditionFactor);
-  const suggestedDeposit = Math.round((Number(marketValue) || 40000) * 0.10);
-
-  const threeDayRate = Math.round(suggestedDailyPrice * 0.93);
-  const sevenDayRate = Math.round(suggestedDailyPrice * 0.875);
-
   useEffect(() => {
-    if (useSuggestedPrice) {
-      setDailyRent(suggestedDailyPrice);
-      setDeposit(suggestedDeposit);
-    }
-  }, [marketValue, condition, useSuggestedPrice, suggestedDailyPrice, suggestedDeposit]);
+    if (!useSuggestedPrice || !marketValue) return;
 
-  const handleDetectOwnerGPS = () => {
+    let baseDaily = marketValue * 0.02;
+
+    if (condition === 'Brand New') baseDaily *= 1.25;
+    else if (condition === 'Like New') baseDaily *= 1.15;
+    else if (condition === 'Excellent') baseDaily *= 1.0;
+    else if (condition === 'Good') baseDaily *= 0.85;
+    else if (condition === 'Fair') baseDaily *= 0.7;
+
+    const calculatedDaily = Math.max(50, Math.round(baseDaily / 50) * 50);
+    setDailyRent(calculatedDaily);
+
+    const calculatedDeposit = Math.round((marketValue * 0.1) / 100) * 100;
+    setDeposit(Math.max(500, calculatedDeposit));
+  }, [marketValue, condition, useSuggestedPrice]);
+
+  const handleDetectGPS = () => {
     if (!navigator.geolocation) {
       toast.error('Geolocation is not supported by your browser.');
       return;
     }
+
     setIsDetectingLocation(true);
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         const { latitude: lat, longitude: lng } = pos.coords;
-        setLatitude(Number(lat.toFixed(6)));
-        setLongitude(Number(lng.toFixed(6)));
+        setLatitude(lat);
+        setLongitude(lng);
         setGpsCaptured(true);
 
         try {
           const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
           const data = await res.json();
-          const road = data.address?.road || data.address?.suburb || 'Town Road';
-          const area = data.address?.city || data.address?.town || data.address?.village || 'Bhimavaram';
-          const detectedAddress = `${road}, ${area}, AP`;
-          setLocation(detectedAddress);
-          toast.success(`📍 Exact Location Captured: ${detectedAddress}!`);
+          const place = data.display_name || `${data.address?.suburb || 'Local Area'}, Bhimavaram, AP`;
+          setLocation(place);
+          toast.success('📍 Exact GPS coordinates captured from your device!');
         } catch (e) {
-          toast.success(`📍 Exact GPS Coordinates Captured (${lat.toFixed(4)}, ${lng.toFixed(4)})!`);
+          setLocation('Bhimavaram GPS Verified Zone');
+          toast.success('📍 Device GPS coordinates successfully locked!');
         } finally {
           setIsDetectingLocation(false);
         }
       },
       (err) => {
         setIsDetectingLocation(false);
-        toast.error('Could not access GPS. Using default Bhimavaram coordinates.');
+        toast.error('Location access denied. Please allow GPS access in your browser.');
       },
       { enableHighAccuracy: true, timeout: 10000 }
     );
   };
 
-  if (isConsumerOnly) {
-    return (
-      <div className="max-w-md mx-auto px-4 py-20 text-center space-y-6">
-        <div className="glass-card p-8 rounded-3xl space-y-6 border border-slate-200/80 dark:border-slate-800 shadow-xl">
-          <div className="w-16 h-16 rounded-full bg-amber-100 dark:bg-amber-950/80 text-amber-600 flex items-center justify-center mx-auto shadow">
-            <Lock className="w-8 h-8" />
-          </div>
-
-          <div className="space-y-2">
-            <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white">
-              Listing Restricted to Owners & Developers
-            </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-              Your current account role is set to <strong>Consumer / Buyer</strong>. Product listing options are exclusive to verified Sellers, Owners, and Developers.
-            </p>
-          </div>
-
-          <Link
-            to="/profile"
-            className="w-full inline-flex items-center justify-center py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-sm shadow-md transition"
-          >
-            Update Role in Profile
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
   const handleImageFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       setSelectedFile(file);
-      const objectUrl = URL.createObjectURL(file);
-      setImagePreview(objectUrl);
-      toast.success('Product photo uploaded successfully!');
+      const previewUrl = URL.createObjectURL(file);
+      setImagePreview(previewUrl);
+      toast.success('Product photo loaded for upload!');
     }
   };
 
-  const handleImageUrlChange = (e) => {
-    const url = e.target.value;
-    setImageUrlInput(url);
-    if (url.trim()) {
-      setImagePreview(url.trim());
+  const handleImageUrlSubmit = (e) => {
+    e.preventDefault();
+    if (imageUrlInput.trim()) {
+      setImagePreview(imageUrlInput.trim());
+      toast.success('Image web URL applied!');
     }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
+    // STRICT AUTHENTICATION CHECK
+    if (!isAuthenticated || !user) {
+      toast.error('Please log in to your owner account to publish items.');
+      navigate('/login?redirect=/list-item');
+      return;
+    }
+
+    if (isConsumerOnly) {
+      toast.error('Your account role is Consumer / Buyer. Please switch to Seller / Owner to list items.');
+      return;
+    }
+
     if (!title.trim()) {
-      toast.error('Please enter the product title');
+      toast.error('Please enter a product title');
       return;
     }
 
@@ -185,9 +169,9 @@ export const ListItemPage = () => {
         condition,
         features: featuresArr,
         images: [finalImage],
-        ownerName: user?.name || 'Verified Owner',
-        ownerPhone: user?.phone || '+91 98765 43210',
-        ownerEmail: user?.email || 'owner@example.com',
+        ownerName: user.name,
+        ownerPhone: user.phone || '+91 98765 43210',
+        ownerEmail: user.email,
         location: {
           city: 'Bhimavaram',
           address: location,
@@ -200,6 +184,93 @@ export const ListItemPage = () => {
       navigate(`/item/${newItem.id}`);
     }, 800);
   };
+
+  // 1. GUEST AUTHENTICATION GUARD (Cannot list without logging in)
+  if (!isAuthenticated || !user) {
+    return (
+      <div className="max-w-xl mx-auto px-4 py-16 text-center space-y-6">
+        <div className="w-20 h-20 mx-auto rounded-3xl bg-blue-100 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shadow-lg border border-blue-200 dark:border-blue-800">
+          <Lock className="w-10 h-10" />
+        </div>
+        
+        <div className="space-y-2">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 text-xs font-bold">
+            <ShieldCheck className="w-3.5 h-3.5" />
+            Verified Owner Authentication Required
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+            Sign In to List Your Equipment
+          </h1>
+          <p className="text-sm text-slate-500 max-w-md mx-auto">
+            To ensure safety, escrow protection, and direct communication between renters and owners in Bhimavaram, you must be logged into an authenticated account.
+          </p>
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4">
+          <Link
+            to="/login?redirect=/list-item"
+            className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-sm shadow-md transition flex items-center justify-center gap-2 cursor-pointer"
+          >
+            Sign In to Your Account
+          </Link>
+          <Link
+            to="/register?role=Seller%20%2F%20Owner"
+            className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-800 dark:text-slate-200 font-bold text-sm transition flex items-center justify-center gap-2 cursor-pointer"
+          >
+            Create Seller Account
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // 2. CONSUMER-ONLY ROLE RESTRICTION GUARD
+  if (isConsumerOnly) {
+    return (
+      <div className="max-w-xl mx-auto px-4 py-16 text-center space-y-6">
+        <div className="w-20 h-20 mx-auto rounded-3xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shadow-lg border border-amber-200 dark:border-amber-800">
+          <Tag className="w-10 h-10" />
+        </div>
+
+        <div className="space-y-2">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 text-xs font-bold">
+            <Sparkles className="w-3.5 h-3.5" />
+            Seller / Owner Role Required
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+            Enable Seller Account to Post Items
+          </h1>
+          <p className="text-sm text-slate-500 max-w-md mx-auto">
+            You are logged in as <strong>{user.name}</strong> ({user.email}) with role <strong>Consumer / Buyer</strong>. Click below to upgrade your account to list products.
+          </p>
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4">
+          <button
+            onClick={() => {
+              if (updateUserRole) {
+                updateUserRole('Both');
+                toast.success('🎉 Account upgraded to Owner & Renter! You can now list items.');
+              } else {
+                navigate('/profile');
+              }
+            }}
+            className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-sm shadow-md transition flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <Sparkles className="w-4 h-4" />
+            Enable Owner Role (1-Click Upgrade)
+          </button>
+          
+          <Link
+            to="/profile"
+            className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-800 dark:text-slate-200 font-bold text-sm transition flex items-center justify-center gap-2"
+          >
+            Go to Profile
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
@@ -217,7 +288,7 @@ export const ListItemPage = () => {
       <div className="space-y-2">
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-xs font-bold">
           <Sparkles className="w-3.5 h-3.5 text-amber-500 fill-current" />
-          Owner & Developer Product Portal
+          Owner Product Portal ({user.name})
         </div>
         <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
           List Your Item for Rent
