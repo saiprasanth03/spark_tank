@@ -245,14 +245,11 @@ export const BookingProvider = ({ children }) => {
 
         if (itemsRes.ok) {
           const json = await itemsRes.json();
-          if (json.success && Array.isArray(json.data)) {
-            setItems(prev => {
-              const merged = mergeCustomAndBase([...json.data, ...prev]);
-              try {
-                localStorage.setItem(STORAGE_KEYS.ITEMS, JSON.stringify(merged));
-              } catch (e) {}
-              return merged;
-            });
+          if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+            setItems(json.data);
+            try {
+              localStorage.setItem(STORAGE_KEYS.ITEMS, JSON.stringify(json.data));
+            } catch (e) {}
           }
         }
 
