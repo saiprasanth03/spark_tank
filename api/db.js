@@ -49,7 +49,7 @@ const userSchema = new mongoose.Schema({
   rating: { type: Number, default: 5.0 },
   reviews: [Object],
   createdAt: { type: Date, default: Date.now }
-});
+}, { strict: false });
 
 const itemSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true },
@@ -85,7 +85,7 @@ const itemSchema = new mongoose.Schema({
     lng: Number
   },
   createdAt: { type: Date, default: Date.now }
-});
+}, { strict: false });
 
 const bookingSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true },
@@ -113,9 +113,15 @@ const bookingSchema = new mongoose.Schema({
   pickupInspection: Object,
   escrowPayment: Object,
   returnInspection: Object,
+  returnInspection: Object,
   createdAt: { type: Date, default: Date.now }
-});
+}, { strict: false });
 
-export const User = mongoose.models.User || mongoose.model('User', userSchema);
-export const Item = mongoose.models.Item || mongoose.model('Item', itemSchema);
-export const Booking = mongoose.models.Booking || mongoose.model('Booking', bookingSchema);
+// Force delete cached models to clear Vercel's stale schema cache
+delete mongoose.models.User;
+delete mongoose.models.Item;
+delete mongoose.models.Booking;
+
+export const User = mongoose.model('User', userSchema);
+export const Item = mongoose.model('Item', itemSchema);
+export const Booking = mongoose.model('Booking', bookingSchema);
