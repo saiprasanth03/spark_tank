@@ -16,6 +16,7 @@ import {
   ArrowLeft,
   Calculator,
   Lock,
+  Mail,
   Compass,
   Navigation
 } from 'lucide-react';
@@ -368,46 +369,42 @@ export const ListItemPage = () => {
   if (isConsumerOnly) {
     return (
       <div className="max-w-xl mx-auto px-4 py-16 text-center space-y-6">
-        <div className="w-20 h-20 mx-auto rounded-3xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shadow-lg border border-amber-200 dark:border-amber-800">
-          <Tag className="w-10 h-10" />
+        <div className="w-20 h-20 mx-auto rounded-3xl bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 flex items-center justify-center shadow-lg border border-slate-200 dark:border-slate-700">
+          <ShieldCheck className="w-10 h-10" />
         </div>
 
-        <div className="space-y-2">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 text-xs font-bold">
-            <Sparkles className="w-3.5 h-3.5" />
-            Seller / Owner Role Required
+        <div className="space-y-3">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 text-xs font-bold border border-rose-200 dark:border-rose-800">
+            <Lock className="w-3.5 h-3.5" />
+            Seller Access Restricted
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-            Enable Seller Account to Post Items
+            Seller / Owner Role Required
           </h1>
-          <p className="text-sm text-slate-500 max-w-md mx-auto">
-            You are logged in as <strong>{user?.name || 'User'}</strong> ({user?.email || ''}) with role <strong>Consumer / Buyer</strong>. Click below to upgrade your account to list products.
+          <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
+            Your account (<strong>{user?.name || 'User'}</strong> — <span className="text-slate-400">{user?.email}</span>) is registered as a <strong>Consumer / Buyer</strong>.
+          </p>
+          <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+            To list and rent out equipment, your account must be upgraded to <strong>Seller / Owner</strong> by the platform administrator.
           </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4">
-          <button
-            onClick={() => {
-              if (updateUserRole) {
-                updateUserRole('Both');
-                toast.success('🎉 Account upgraded to Owner & Renter! You can now list items.');
-              } else {
-                navigate('/profile');
-              }
-            }}
-            className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-sm shadow-md transition flex items-center justify-center gap-2 cursor-pointer"
-          >
-            <Sparkles className="w-4 h-4" />
-            Enable Owner Role (1-Click Upgrade)
-          </button>
-          
-          <Link
-            to="/profile"
-            className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-800 dark:text-slate-200 font-bold text-sm transition flex items-center justify-center gap-2"
-          >
-            Go to Profile
-          </Link>
+        <div className="p-5 rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 text-left space-y-2">
+          <h4 className="font-extrabold text-slate-900 dark:text-white text-sm flex items-center gap-2">
+            <Mail className="w-4 h-4 text-blue-500" />
+            How to Become a Seller
+          </h4>
+          <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+            Contact the BorrowBridge admin at <span className="font-bold text-blue-600">admin@borrowbridge.in</span> with your account email and request to be upgraded to Seller status. The admin will review and update your role.
+          </p>
         </div>
+
+        <Link
+          to="/profile"
+          className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-sm transition"
+        >
+          ← Back to My Profile
+        </Link>
       </div>
     );
   }
