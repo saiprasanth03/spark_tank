@@ -153,30 +153,16 @@ export const ProfilePage = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       
-      {/* 1-CLICK BUYER TO SELLER CONVERSION BANNER */}
+      {/* Buyer info banner - seller role requires admin assignment */}
       {user.role === 'Consumer / Buyer' && (
-        <div className="p-5 rounded-3xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm animate-in fade-in duration-300">
-          <div className="flex items-center gap-3 text-center sm:text-left">
-            <div className="w-12 h-12 rounded-2xl bg-amber-500 text-white flex items-center justify-center shadow-md flex-shrink-0">
-              <Sparkles className="w-6 h-6" />
-            </div>
-            <div>
-              <h4 className="font-extrabold text-slate-900 dark:text-white text-base">Want to List & Rent Out Your Equipment?</h4>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Your account is currently set to <strong>Buyer</strong>. Convert to <strong>Seller / Owner</strong> with 1 click to start listing equipment.</p>
-            </div>
+        <div className="p-5 rounded-3xl bg-blue-500/10 border border-blue-500/30 flex items-center gap-4 shadow-sm animate-in fade-in duration-300">
+          <div className="w-10 h-10 rounded-2xl bg-blue-500 text-white flex items-center justify-center shadow-md flex-shrink-0">
+            <ShieldCheck className="w-5 h-5" />
           </div>
-          <button
-            onClick={() => {
-              if (updateUserRole) {
-                updateUserRole('Both');
-                toast.success('🎉 Account upgraded to Seller / Owner! You can now list items.');
-              }
-            }}
-            className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs shadow-md transition flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap"
-          >
-            <Zap className="w-4 h-4" />
-            ⚡ Enable Seller Role (1-Click)
-          </button>
+          <div>
+            <h4 className="font-extrabold text-slate-900 dark:text-white text-sm">You're a Verified Consumer / Buyer</h4>
+            <p className="text-xs text-slate-500 dark:text-slate-400">To become a Seller / Owner and list equipment, contact the platform admin to upgrade your account.</p>
+          </div>
         </div>
       )}
 
@@ -210,21 +196,7 @@ export const ProfilePage = () => {
               <span className="px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 font-bold text-xs">
                 {user.role} Member
               </span>
-              {user.role === 'Consumer / Buyer' && (
-                <button
-                  onClick={() => {
-                    if (updateUserRole) {
-                      updateUserRole('Both');
-                      toast.success('🎉 Role updated to Owner & Renter!');
-                    }
-                  }}
-                  className="px-2.5 py-0.5 rounded-full bg-amber-100 hover:bg-amber-200 text-amber-800 text-[11px] font-bold transition flex items-center gap-1 cursor-pointer"
-                  title="Click to enable Seller privileges"
-                >
-                  <Zap className="w-3 h-3" />
-                  + Switch to Seller
-                </button>
-              )}
+
             </div>
 
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 text-xs text-slate-500 dark:text-slate-400">

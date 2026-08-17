@@ -205,11 +205,17 @@ export const ItemDetailPage = () => {
               <span className="px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 font-extrabold text-xs uppercase tracking-wide">
                 {item.category}
               </span>
-              <div className="flex items-center gap-1.5 text-amber-500 font-extrabold text-sm">
-                <Star className="w-4 h-4 fill-current" />
-                <span>{item.rating || 5.0}</span>
-                <span className="text-slate-400 font-normal">({item.reviewCount || 1} verified ratings)</span>
-              </div>
+              {productReviewsList.length > 0 ? (
+                <div className="flex items-center gap-1.5 text-amber-500 font-extrabold text-sm">
+                  <Star className="w-4 h-4 fill-current" />
+                  <span>
+                    {(productReviewsList.reduce((sum, r) => sum + (r.rating || 0), 0) / productReviewsList.length).toFixed(1)}
+                  </span>
+                  <span className="text-slate-400 font-normal">({productReviewsList.length} verified {productReviewsList.length === 1 ? 'review' : 'reviews'})</span>
+                </div>
+              ) : (
+                <span className="text-slate-400 dark:text-slate-500 text-xs font-medium">No reviews yet</span>
+              )}
             </div>
 
             <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white leading-tight">

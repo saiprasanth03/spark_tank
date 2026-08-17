@@ -8,8 +8,15 @@ import { isAdminEmail } from '../data/adminEmails';
 
 export const ItemCard = ({ item }) => {
   const navigate = useNavigate();
-  const { isWishlisted, toggleWishlist, deleteItem } = useBooking();
+  const { isWishlisted, toggleWishlist, deleteItem, productReviews } = useBooking();
   const { user } = useAuth();
+
+  // Compute rating only from real submitted reviews — never use hardcoded item.rating
+  const realReviews = (productReviews && productReviews[item.id]) || [];
+  const hasRealReviews = realReviews.length > 0;
+  const avgRating = hasRealReviews
+    ? (realReviews.reduce((sum, r) => sum + (r.rating || 0), 0) / realReviews.length).toFixed(1)
+    : null;
   const wishlisted = isWishlisted(item.id);
 
   const isAdmin = user && isAdminEmail(user.email);
@@ -118,11 +125,15 @@ export const ItemCard = ({ item }) => {
               <span className="truncate">{locationCity}</span>
             </div>
 
-            <div className="flex items-center gap-1 text-amber-500 font-extrabold">
-              <Star className="w-3.5 h-3.5 fill-current" />
-              <span>{item.rating}</span>
-              <span className="text-slate-400 dark:text-slate-500 font-normal">({item.reviewCount})</span>
-            </div>
+            {hasRealReviews ? (
+              <div className="flex items-center gap-1 text-amber-500 font-extrabold">
+                <Star className="w-3.5 h-3.5 fill-current" />
+                <span>{avgRating}</span>
+                <span className="text-slate-400 dark:text-slate-500 font-normal">({realReviews.length})</span>
+              </div>
+            ) : (
+              <span className="text-slate-400 dark:text-slate-600 text-[10px] font-medium">No reviews yet</span>
+            )}
           </div>
 
           {/* Title */}
