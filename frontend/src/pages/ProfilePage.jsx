@@ -96,6 +96,9 @@ export const ProfilePage = () => {
 
   const { updateUserRole } = useAuth();
 
+  // A pure buyer has NO seller/owner capabilities — hide all owner UI
+  const isBuyerOnly = user?.role === 'Consumer / Buyer';
+
   const handleAddReview = (newReview) => {
     setUserReviewsList(prev => [newReview, ...prev]);
   };
@@ -315,8 +318,8 @@ export const ProfilePage = () => {
       {activeTab === 'bookings' && (
         <div className="space-y-6">
           
-          {/* Incoming Owner Requests Alert Banner (ONLY shows if logged-in user OWNS the requested items) */}
-          {pendingOwnerCount > 0 && (
+          {/* Incoming Owner Requests Alert Banner — hidden for pure buyers */}
+          {!isBuyerOnly && pendingOwnerCount > 0 && (
             <div className="p-5 rounded-3xl bg-amber-500/10 border-2 border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-in slide-in-from-top-2">
               <div className="flex items-center gap-3.5">
                 <div className="p-3 rounded-2xl bg-amber-500 text-white shadow-md animate-pulse">
@@ -344,55 +347,52 @@ export const ProfilePage = () => {
             </div>
           )}
 
-          {/* Sub-view Switcher: Renter vs Owner View */}
+          {/* Sub-view Switcher: hidden for pure buyers who can only ever be renters */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700">
             <div>
               <h3 className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
                 Peer-to-Peer Rental Lifecycle Hub
-                {bookingRoleView === 'owner' ? (
-                  <span className="text-xs font-bold text-emerald-600 bg-emerald-100 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full">
-                    Lender / Owner Perspective
-                  </span>
-                ) : (
-                  <span className="text-xs font-bold text-blue-600 bg-blue-100 dark:bg-blue-950/60 px-2 py-0.5 rounded-full">
-                    Borrower / Renter Perspective
-                  </span>
-                )}
+                <span className="text-xs font-bold text-blue-600 bg-blue-100 dark:bg-blue-950/60 px-2 py-0.5 rounded-full">
+                  {isBuyerOnly ? 'Borrower / Renter Perspective' : (bookingRoleView === 'owner' ? 'Lender / Owner Perspective' : 'Borrower / Renter Perspective')}
+                </span>
               </h3>
               <p className="text-xs text-slate-500">
-                {bookingRoleView === 'owner'
+                {!isBuyerOnly && bookingRoleView === 'owner'
                   ? 'Manage incoming booking requests from renters for your listed equipment.'
                   : 'Track items you are borrowing, pay escrow deposits, and submit post-return reviews.'}
               </p>
             </div>
 
-            <div className="flex items-center gap-1.5 bg-white dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-700 flex-shrink-0">
-              <button
-                onClick={() => setBookingRoleView('renter')}
-                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
-                  bookingRoleView === 'renter'
-                    ? 'bg-blue-600 text-white shadow-sm'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-                }`}
-              >
-                👤 As Renter (My Borrowed Gear)
-              </button>
-              <button
-                onClick={() => setBookingRoleView('owner')}
-                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
-                  bookingRoleView === 'owner'
-                    ? 'bg-blue-600 text-white shadow-sm'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-                }`}
-              >
-                <span>🏷️ As Owner</span>
-                {pendingOwnerCount > 0 && (
-                  <span className="px-1.5 py-0.2 rounded-full bg-amber-500 text-white text-[10px] font-black animate-pulse">
-                    {pendingOwnerCount}
-                  </span>
-                )}
-              </button>
-            </div>
+            {/* Only sellers/both roles see the owner toggle */}
+            {!isBuyerOnly && (
+              <div className="flex items-center gap-1.5 bg-white dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-700 flex-shrink-0">
+                <button
+                  onClick={() => setBookingRoleView('renter')}
+                  className={`px-4 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                    bookingRoleView === 'renter'
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                  }`}
+                >
+                  👤 As Renter (My Borrowed Gear)
+                </button>
+                <button
+                  onClick={() => setBookingRoleView('owner')}
+                  className={`px-4 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+                    bookingRoleView === 'owner'
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                  }`}
+                >
+                  <span>🏷️ As Owner</span>
+                  {pendingOwnerCount > 0 && (
+                    <span className="px-1.5 py-0.2 rounded-full bg-amber-500 text-white text-[10px] font-black animate-pulse">
+                      {pendingOwnerCount}
+                    </span>
+                  )}
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Bookings List */}
