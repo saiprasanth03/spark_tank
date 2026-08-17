@@ -26,6 +26,7 @@ export const EditProductModal = ({ isOpen, onClose, item, onSave, isSuperAdmin =
   const [marketValue, setMarketValue] = useState(30000);
   const [description, setDescription] = useState('');
   const [customTerms, setCustomTerms] = useState('');
+  const [features, setFeatures] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [additionalImages, setAdditionalImages] = useState([]);
   const [newAdditionalImage, setNewAdditionalImage] = useState('');
