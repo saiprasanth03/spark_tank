@@ -95,12 +95,22 @@ export const ProfilePage = () => {
   });
 
   const { updateUserRole } = useAuth();
+  const { addProductReview } = useBooking();
 
   // A pure buyer has NO seller/owner capabilities — hide all owner UI
   const isBuyerOnly = user?.role === 'Consumer / Buyer';
 
   const handleAddReview = (newReview) => {
+    // Save to local profile view
     setUserReviewsList(prev => [newReview, ...prev]);
+    // Save to actual product context so it shows on the item detail page
+    if (addProductReview && newReview.bookingId) {
+      // Extract itemId from booking. We need to find the booking from displayedBookings
+      const bk = displayedBookings.find(b => b.id === newReview.bookingId);
+      if (bk && bk.itemId) {
+        addProductReview(bk.itemId, newReview);
+      }
+    }
   };
 
   if (!user) {
@@ -440,7 +450,7 @@ export const ProfilePage = () => {
                           <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500">
                             <span className="flex items-center gap-1 font-semibold text-slate-700 dark:text-slate-300">
                               <Calendar className="w-3.5 h-3.5 text-blue-500" />
-                              {bk.startDate} to {bk.endDate} ({bk.days} {bk.days === 1 ? 'day' : 'days'})
+                              {bk.startDate} to {bk.endDate} ({bk.days || Math.max(1, Math.ceil(Math.abs(new Date(bk.endDate) - new Date(bk.startDate)) / (1000 * 60 * 60 * 24)))} days)
                             </span>
                             <span>•</span>
                             <span>{isRenterView ? `Owner: ${bk.ownerName} (${bk.ownerPhone})` : `Renter: ${bk.renterName} (${bk.renterPhone})`}</span>

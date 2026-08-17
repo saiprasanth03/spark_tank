@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useBooking } from '../context/BookingContext';
 import { useAuth } from '../context/AuthContext';
+import { DigitalAgreementModal } from '../components/DigitalAgreementModal';
 import { 
   Calendar, 
   MapPin, 
@@ -14,7 +15,8 @@ import {
   Clock,
   ClipboardCheck,
   Zap,
-  UserCheck
+  UserCheck,
+  FileText
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -31,7 +33,9 @@ export const BookingPage = () => {
   const [startDate, setStartDate] = useState('2026-08-18');
   const [endDate, setEndDate] = useState('2026-08-20');
   const [deliveryOption, setDeliveryOption] = useState('pickup');
-  const [agreedToTerms, setAgreedToTerms] = useState(true);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [hasViewedAgreement, setHasViewedAgreement] = useState(false);
+  const [isAgreementModalOpen, setIsAgreementModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Date calculations
@@ -74,7 +78,8 @@ export const BookingPage = () => {
         ownerName: item.owner.name,
         ownerPhone: item.owner.phone,
         ownerEmail: item.owner.email || 'seller@example.com',
-        ownerLocation: item.owner.location || item.location.address
+        ownerLocation: item.owner.location || item.location.address,
+        customTerms: item.customTerms
       });
 
       setIsSubmitting(false);
@@ -220,18 +225,36 @@ export const BookingPage = () => {
           </div>
 
           {/* Terms Acceptance */}
-          <div className="glass-card p-6 rounded-3xl space-y-3 border border-slate-200/80 dark:border-slate-800">
-            <label className="flex items-start gap-3 cursor-pointer">
+          <div className="glass-card p-6 rounded-3xl space-y-4 border border-slate-200/80 dark:border-slate-800">
+            
+            <button
+              onClick={() => {
+                setIsAgreementModalOpen(true);
+                setHasViewedAgreement(true);
+              }}
+              className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-800 dark:text-slate-200 font-bold text-sm flex items-center justify-center gap-2 border border-slate-300 dark:border-slate-700 transition cursor-pointer"
+            >
+              <FileText className="w-4 h-4 text-blue-500" />
+              View Digital Rental Agreement
+            </button>
+
+            <label className={`flex items-start gap-3 transition-opacity ${!hasViewedAgreement ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
               <input
                 type="checkbox"
                 checked={agreedToTerms}
+                disabled={!hasViewedAgreement}
                 onChange={(e) => setAgreedToTerms(e.target.checked)}
-                className="mt-0.5 w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                className="mt-0.5 w-4 h-4 text-blue-600 rounded focus:ring-blue-500 disabled:cursor-not-allowed"
               />
               <span className="text-xs text-slate-700 dark:text-slate-300 font-semibold leading-relaxed">
                 I agree to meet the owner for working condition verification, accept the Digital Rental Agreement upon pickup, and authorize the refundable security deposit of ₹{item.deposit}.
               </span>
             </label>
+            {!hasViewedAgreement && (
+              <p className="text-[10px] text-rose-500 font-bold ml-7">
+                * You must open and view the Digital Rental Agreement before accepting.
+              </p>
+            )}
           </div>
 
         </div>
@@ -303,6 +326,25 @@ export const BookingPage = () => {
         </div>
 
       </div>
+      {isAgreementModalOpen && (
+        <DigitalAgreementModal
+          booking={{
+            id: `bk-preview-${item.id}`,
+            ownerName: item.owner?.name,
+            renterName: user?.name,
+            startDate,
+            endDate,
+            days,
+            itemTitle: item.title,
+            itemImage: item.images[0],
+            dailyRent: item.dailyRent,
+            deposit: item.deposit,
+            location: item.location,
+            customTerms: item.customTerms
+          }}
+          onClose={() => setIsAgreementModalOpen(false)}
+        />
+      )}
     </div>
   );
 };

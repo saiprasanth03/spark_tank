@@ -334,15 +334,6 @@ export const ItemDetailPage = () => {
                   Verified reviews and equipment condition feedback from community renters
                 </p>
               </div>
-
-              {/* Leave Product Review Button */}
-              <button
-                onClick={() => setIsReviewModalOpen(true)}
-                className="px-5 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs shadow-md shadow-blue-500/20 transition flex items-center gap-1.5 cursor-pointer flex-shrink-0"
-              >
-                <Sparkles className="w-4 h-4 text-amber-300 fill-current" />
-                Leave Product Feedback
-              </button>
             </div>
 
             {/* List of Product Reviews */}

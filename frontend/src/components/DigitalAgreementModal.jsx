@@ -137,6 +137,9 @@ export const DigitalAgreementModal = ({ booking, onClose }) => {
               <li><strong>Escrow Protection:</strong> Safety deposit of ₹{booking.deposit} is held securely in platform escrow until the item is safely handed over back to the owner.</li>
               <li><strong>Damage Inspection:</strong> Party A (Owner) will inspect the returned item. If no damage is identified, the safety deposit will be 100% refunded to Party B.</li>
               <li><strong>Verified Peer Reviews:</strong> Peer reviews can only be submitted after the item is handed over and returned to the owner.</li>
+              {booking.customTerms && (
+                <li><strong>Owner's Custom Terms:</strong> {booking.customTerms}</li>
+              )}
             </ol>
           </div>
 

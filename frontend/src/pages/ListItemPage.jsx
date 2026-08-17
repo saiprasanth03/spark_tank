@@ -38,6 +38,7 @@ export const ListItemPage = () => {
   const [age, setAge] = useState('');
   const [condition, setCondition] = useState('');
   const [accessories, setAccessories] = useState('');
+  const [customTerms, setCustomTerms] = useState('');
   
   // Location & Exact GPS Coordinates - Empty until owner enters or clicks auto-detect
   const [location, setLocation] = useState('');
@@ -212,6 +213,7 @@ export const ListItemPage = () => {
         marketValue: Number(marketValue) || (Number(dailyRent) * 50),
         deposit: Number(deposit),
         condition,
+        customTerms,
         features: featuresArr,
         images: [finalImage],
         ownerName: user.name,
@@ -529,10 +531,23 @@ export const ListItemPage = () => {
               </select>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                Included Accessories & Cables
-              </label>
+                  <div className="md:col-span-2 space-y-2">
+                    <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300 block">
+                      Custom Rental Terms / Owner Conditions <span className="text-slate-400 font-normal">(Optional)</span>
+                    </label>
+                    <textarea
+                      value={customTerms}
+                      onChange={(e) => setCustomTerms(e.target.value)}
+                      placeholder="e.g., Must return with fully charged battery. No beach photography."
+                      rows={2}
+                      className="w-full px-4 py-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-white text-sm"
+                    />
+                  </div>
+                  
+                  <div className="md:col-span-2 space-y-2">
+                    <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300 block">
+                      Included Accessories <span className="text-slate-400 font-normal">(Optional)</span>
+                    </label>
               <input
                 type="text"
                 value={accessories}

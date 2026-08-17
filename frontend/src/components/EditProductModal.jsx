@@ -25,6 +25,7 @@ export const EditProductModal = ({ isOpen, onClose, item, onSave, isSuperAdmin =
   const [deposit, setDeposit] = useState(2500);
   const [marketValue, setMarketValue] = useState(30000);
   const [description, setDescription] = useState('');
+  const [customTerms, setCustomTerms] = useState('');
   const [features, setFeatures] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [locationAddress, setLocationAddress] = useState('');
@@ -41,6 +42,7 @@ export const EditProductModal = ({ isOpen, onClose, item, onSave, isSuperAdmin =
       setDeposit(item.deposit || 2500);
       setMarketValue(item.marketValue || 30000);
       setDescription(item.description || '');
+      setCustomTerms(item.customTerms || '');
       setFeatures(Array.isArray(item.features) ? item.features.join(', ') : (item.features || ''));
       setImageUrl(item.images && item.images[0] ? item.images[0] : '');
       setLocationAddress(item.location?.address || 'SRKR College Road, Bhimavaram, AP');
@@ -113,6 +115,7 @@ export const EditProductModal = ({ isOpen, onClose, item, onSave, isSuperAdmin =
       deposit: Number(deposit),
       marketValue: Number(marketValue),
       description: description.trim(),
+      customTerms: customTerms.trim(),
       features: featuresArray,
       images: imageUrl ? [imageUrl] : item.images,
       location: {
@@ -178,6 +181,19 @@ export const EditProductModal = ({ isOpen, onClose, item, onSave, isSuperAdmin =
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="e.g. Sony Alpha A7 IV Mirrorless Kit"
                 className="w-full px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-sm font-semibold text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                Custom Rental Terms (Optional)
+              </label>
+              <textarea
+                value={customTerms}
+                onChange={(e) => setCustomTerms(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-sm focus:ring-2 focus:ring-blue-500"
+                rows="2"
+                placeholder="e.g. No beach use, must return fully charged"
               />
             </div>
 
