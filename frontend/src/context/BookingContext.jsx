@@ -234,13 +234,17 @@ export const BookingProvider = ({ children }) => {
     ];
   });
 
-  // Fetch live cloud items from MongoDB API on startup and poll every 8 seconds
+  // Fetch live cloud items & bookings from MongoDB API on startup and poll every 8 seconds
   useEffect(() => {
-    const fetchCloudItems = async () => {
+    const fetchCloudData = async () => {
       try {
-        const res = await fetch('/api/items');
-        if (res.ok) {
-          const json = await res.json();
+        const [itemsRes, bookingsRes] = await Promise.all([
+          fetch('/api/items'),
+          fetch('/api/bookings')
+        ]);
+
+        if (itemsRes.ok) {
+          const json = await itemsRes.json();
           if (json.success && Array.isArray(json.data)) {
             setItems(prev => {
               const merged = mergeCustomAndBase([...json.data, ...prev]);
@@ -251,13 +255,28 @@ export const BookingProvider = ({ children }) => {
             });
           }
         }
+
+        if (bookingsRes.ok) {
+          const bJson = await bookingsRes.json();
+          if (bJson.success && Array.isArray(bJson.data) && bJson.data.length > 0) {
+            setMyBookings(prev => {
+              const dbIds = new Set(bJson.data.map(b => b.id));
+              const localOnly = prev.filter(p => !dbIds.has(p.id));
+              const mergedBookings = [...bJson.data, ...localOnly];
+              try {
+                localStorage.setItem(STORAGE_KEYS.BOOKINGS, JSON.stringify(mergedBookings));
+              } catch (e) {}
+              return mergedBookings;
+            });
+          }
+        }
       } catch (err) {
         // Offline / fallback to local cache
       }
     };
 
-    fetchCloudItems();
-    const interval = setInterval(fetchCloudItems, 8000);
+    fetchCloudData();
+    const interval = setInterval(fetchCloudData, 8000);
     return () => clearInterval(interval);
   }, []);
 
@@ -399,23 +418,42 @@ export const BookingProvider = ({ children }) => {
       createdAt: new Date().toISOString()
     };
     setMyBookings(prev => [newBooking, ...prev]);
+
+    // Save to MongoDB Atlas test.bookings
+    fetch('/api/bookings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newBooking)
+    }).catch(() => {});
+
     toast.success('Booking request sent to owner! Awaiting owner acceptance.', { duration: 4000 });
     return newBooking;
   };
 
   const createBooking = (bookingData) => createBookingRequest(bookingData);
 
+  // Helper to sync booking updates to MongoDB
+  const syncBookingUpdateToCloud = (updatedBk) => {
+    fetch('/api/bookings', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updatedBk)
+    }).catch(() => {});
+  };
+
   // STAGE 2: Owner Accepts Booking Request
   const acceptBookingRequest = (bookingId) => {
     setMyBookings(prev => prev.map(bk => {
       if (bk.id === bookingId) {
         toast.success('Booking request accepted! Coordinate with renter for physical pickup & working inspection.');
-        return {
+        const updated = {
           ...bk,
           stage: 'ACCEPTED',
           status: 'Request Accepted - Awaiting Joint Pickup Inspection',
           escrowStatus: 'Awaiting Pickup & Escrow Payment'
         };
+        syncBookingUpdateToCloud(updated);
+        return updated;
       }
       return bk;
     }));
@@ -426,13 +464,15 @@ export const BookingProvider = ({ children }) => {
     setMyBookings(prev => prev.map(bk => {
       if (bk.id === bookingId) {
         toast('Booking request declined.', { icon: 'ℹ️' });
-        return {
+        const updated = {
           ...bk,
           stage: 'DECLINED',
           status: 'Declined by Owner',
           escrowStatus: 'No Charges Made',
           declineReason: reason
         };
+        syncBookingUpdateToCloud(updated);
+        return updated;
       }
       return bk;
     }));
@@ -443,7 +483,7 @@ export const BookingProvider = ({ children }) => {
     setMyBookings(prev => prev.map(bk => {
       if (bk.id === bookingId) {
         toast.success('Working condition checklist recorded! Renter can now accept & authorize Escrow payment.', { duration: 4500 });
-        return {
+        const updated = {
           ...bk,
           stage: 'INSPECTION_PENDING_RENTER',
           status: 'Inspection Logged - Awaiting Renter Payment & Agreement',
@@ -456,6 +496,8 @@ export const BookingProvider = ({ children }) => {
             inspectedBy: `${bk.ownerName} (Owner)`
           }
         };
+        syncBookingUpdateToCloud(updated);
+        return updated;
       }
       return bk;
     }));
@@ -466,7 +508,7 @@ export const BookingProvider = ({ children }) => {
     setMyBookings(prev => prev.map(bk => {
       if (bk.id === bookingId) {
         toast.success(`Payment successful! ₹${bk.deposit} security deposit secured in Escrow. Rental is now active!`, { duration: 5000 });
-        return {
+        const updated = {
           ...bk,
           stage: 'ACTIVE',
           status: 'Active Rental - Item Handed Over',
@@ -474,6 +516,8 @@ export const BookingProvider = ({ children }) => {
           paymentMethod: paymentData.paymentMethod || 'UPI / Instant Escrow Pay',
           paidAt: new Date().toISOString()
         };
+        syncBookingUpdateToCloud(updated);
+        return updated;
       }
       return bk;
     }));
@@ -484,12 +528,14 @@ export const BookingProvider = ({ children }) => {
     setMyBookings(prev => prev.map(bk => {
       if (bk.id === bookingId) {
         toast.success('Return initiated! Meet the owner for final condition handover & deposit settlement.', { duration: 4500 });
-        return {
+        const updated = {
           ...bk,
           stage: 'RETURN_INITIATED',
           status: 'Return in Progress - Under Final Inspection',
           escrowStatus: 'Escrow Ready for Final Settlement'
         };
+        syncBookingUpdateToCloud(updated);
+        return updated;
       }
       return bk;
     }));
@@ -517,22 +563,24 @@ export const BookingProvider = ({ children }) => {
           );
         }
 
-        return {
+        const updated = {
           ...bk,
           stage: 'COMPLETED',
-          status: hasDamage && validDamageAmount > 0 ? 'Completed (Damage Settled)' : 'Completed (Deposit Refunded)',
-          escrowStatus: hasDamage && validDamageAmount > 0
-            ? `₹${validDamageAmount} to Owner for Damage | ₹${refundAmount} Refunded to Renter`
-            : `100% Deposit (₹${deposit}) Refunded to Renter`,
+          status: 'Rental Completed & Settled',
+          escrowStatus: hasDamage
+            ? `Settled: ₹${validDamageAmount} damage fee deducted, ₹${refundAmount} refunded`
+            : `Settled: Full ₹${deposit} refunded to renter`,
           returnInspection: {
-            inspected: true,
-            hasDamage: Boolean(hasDamage && validDamageAmount > 0),
-            damageDetails: damageDetails || 'Returned in good working condition.',
+            hasDamage,
+            damageDetails: damageDetails || 'None',
             damageAmount: validDamageAmount,
-            refundAmount: refundAmount,
-            timestamp: new Date().toISOString()
+            refundAmount,
+            completedAt: new Date().toISOString(),
+            inspectedBy: `${bk.ownerName} (Owner)`
           }
         };
+        syncBookingUpdateToCloud(updated);
+        return updated;
       }
       return bk;
     }));

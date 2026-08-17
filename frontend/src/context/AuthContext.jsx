@@ -39,6 +39,22 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('borrowbridge_registered_users', JSON.stringify(registeredUsers));
   }, [registeredUsers]);
 
+  // Sync users with MongoDB Atlas Cloud on startup
+  useEffect(() => {
+    fetch('/api/users')
+      .then(r => r.json())
+      .then(res => {
+        if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+          setRegisteredUsers(prev => {
+            const dbEmails = new Set(res.data.map(u => u.email?.toLowerCase()));
+            const localOnly = prev.filter(p => !dbEmails.has(p.email?.toLowerCase()));
+            return [...res.data, ...localOnly];
+          });
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   const login = async (email, password) => {
     try {
       const cleanEmail = (email || '').trim().toLowerCase();
@@ -68,6 +84,14 @@ export const AuthProvider = ({ children }) => {
         setUser(adminUser);
         setToken('jwt-admin-' + Date.now());
         localStorage.setItem('borrowbridge_token', 'jwt-admin-' + Date.now());
+
+        // Sync admin user to MongoDB
+        fetch('/api/users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(adminUser)
+        }).catch(() => {});
+
         toast.success(`Authenticated as Authorized Admin (${cleanEmail})`);
         return true;
       }
@@ -88,6 +112,14 @@ export const AuthProvider = ({ children }) => {
       setUser(existingUser);
       setToken('jwt-' + Date.now());
       localStorage.setItem('borrowbridge_token', 'jwt-' + Date.now());
+
+      // Sync to MongoDB
+      fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(existingUser)
+      }).catch(() => {});
+
       toast.success(`Welcome back, ${existingUser.name}!`);
       return true;
     } catch (err) {
@@ -138,6 +170,14 @@ export const AuthProvider = ({ children }) => {
       setUser(newUser);
       setToken('jwt-' + Date.now());
       localStorage.setItem('borrowbridge_token', 'jwt-' + Date.now());
+
+      // Save to MongoDB Atlas test.users
+      fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newUser)
+      }).catch(() => {});
+
       toast.success('Account created successfully!');
       return true;
     } catch (err) {
@@ -159,6 +199,14 @@ export const AuthProvider = ({ children }) => {
     const updated = { ...user, role: newRole };
     setUser(updated);
     setRegisteredUsers(prev => prev.map(u => u.id === user.id ? { ...u, role: newRole } : u));
+
+    // Update in MongoDB Atlas
+    fetch('/api/users', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: user.email, role: newRole })
+    }).catch(() => {});
+
     toast.success(`Account role updated to ${newRole}!`);
   };
 
