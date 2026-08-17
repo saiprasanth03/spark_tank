@@ -83,15 +83,17 @@ export const ExplorePage = () => {
 
   // Filtered & Sorted items computation
   const filteredItems = useMemo(() => {
+    const isAllCategory = !selectedCategory || selectedCategory.toLowerCase() === 'all' || selectedCategory.toLowerCase() === 'all categories';
+
     return items.filter(item => {
-      if (selectedCategory !== 'all' && item.category.toLowerCase() !== selectedCategory.toLowerCase()) {
+      if (!isAllCategory && item.category && item.category.toLowerCase() !== selectedCategory.toLowerCase()) {
         return false;
       }
       if (searchQuery.trim() !== '') {
         const q = searchQuery.toLowerCase();
-        const matchesTitle = item.title.toLowerCase().includes(q);
-        const matchesDesc = item.description.toLowerCase().includes(q);
-        const matchesCategory = item.category.toLowerCase().includes(q);
+        const matchesTitle = item.title?.toLowerCase().includes(q);
+        const matchesDesc = item.description?.toLowerCase().includes(q);
+        const matchesCategory = item.category?.toLowerCase().includes(q);
         if (!matchesTitle && !matchesDesc && !matchesCategory) return false;
       }
       const dist = item.distanceKm || item.distance || 0.8;

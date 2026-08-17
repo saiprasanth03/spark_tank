@@ -17,16 +17,31 @@ export const BookingProvider = ({ children }) => {
   // 1. Items with localStorage persistence and base items merging
   const [items, setItems] = useState(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEYS.ITEMS);
-      if (saved) {
-        const parsed = JSON.parse(saved);
+      const savedItems = localStorage.getItem(STORAGE_KEYS.ITEMS);
+      const savedMyListings = localStorage.getItem(STORAGE_KEYS.MY_LISTINGS);
+      let loadedItems = [];
+
+      if (savedItems) {
+        const parsed = JSON.parse(savedItems);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          // Merge custom user-added items with base sample items if needed
-          const customItems = parsed.filter(p => p.id && p.id.startsWith('item-178') || p.id.startsWith('item-17'));
-          const baseIds = new Set(sampleItems.map(s => s.id));
-          const nonDuplicateCustom = customItems.filter(c => !baseIds.has(c.id));
-          return [...nonDuplicateCustom, ...sampleItems];
+          loadedItems = parsed;
         }
+      }
+
+      // Also merge any items from myListings that might be missing from items
+      if (savedMyListings) {
+        const parsedListings = JSON.parse(savedMyListings);
+        if (Array.isArray(parsedListings) && parsedListings.length > 0) {
+          const loadedIds = new Set(loadedItems.map(i => i.id));
+          const missing = parsedListings.filter(l => l && l.id && !loadedIds.has(l.id));
+          loadedItems = [...missing, ...loadedItems];
+        }
+      }
+
+      if (loadedItems.length > 0) {
+        const baseIds = new Set(sampleItems.map(s => s.id));
+        const customItems = loadedItems.filter(i => !baseIds.has(i.id));
+        return [...customItems, ...sampleItems];
       }
     } catch (e) {
       console.error('Error loading items from localStorage', e);
