@@ -730,13 +730,28 @@ export const ListItemPage = () => {
             <div className="space-y-2 pt-4 border-t border-slate-100 dark:border-slate-800">
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between">
                 <span>Additional Images (Optional)</span>
-                <label className="px-3 py-1.5 rounded-xl bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 text-slate-800 dark:text-slate-200 text-[10px] font-bold transition cursor-pointer flex items-center gap-1.5">
-                  <Upload className="w-3 h-3" />
-                  Upload More
-                  <input type="file" multiple accept="image/*" onChange={handleAdditionalImagesChange} className="hidden" />
-                </label>
               </label>
-              <div className="flex gap-2">
+
+              {/* Drag & Drop Zone for Additional Images */}
+              <div className="p-4 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl text-center bg-slate-50/50 dark:bg-slate-800/40 hover:bg-slate-100/80 transition cursor-pointer relative group">
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={handleAdditionalImagesChange}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                />
+                <div className="space-y-1 pointer-events-none flex flex-col items-center justify-center">
+                  <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400 flex items-center justify-center shadow-sm">
+                    <Upload className="w-4 h-4" />
+                  </div>
+                  <p className="text-[11px] font-bold text-slate-800 dark:text-slate-200 mt-2">
+                    Drag & Drop or Click to Upload Multiple Photos
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-2 mt-2">
                 <input
                   type="text"
                   value={newAdditionalImage}
