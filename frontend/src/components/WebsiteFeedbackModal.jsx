@@ -8,7 +8,7 @@ export const WebsiteFeedbackModal = ({ isOpen, onClose }) => {
   const { user } = useAuth();
   const { submitWebsiteFeedback } = useBooking();
 
-  const [rating, setRating] = useState(5);
+  const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [category, setCategory] = useState('Website Experience & UI');
   const [title, setTitle] = useState('');
@@ -29,6 +29,10 @@ export const WebsiteFeedbackModal = ({ isOpen, onClose }) => {
     e.preventDefault();
     if (!message.trim()) {
       toast.error('Please enter your feedback message.');
+      return;
+    }
+    if (!rating || rating < 1) {
+      toast.error('Please select a star rating before submitting.');
       return;
     }
 

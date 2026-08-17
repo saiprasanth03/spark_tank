@@ -3,7 +3,7 @@ import { Star, X, CheckCircle2, ShieldCheck } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export const ReviewModal = ({ booking, onClose, onSubmitReview }) => {
-  const [rating, setRating] = useState(5);
+  const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -14,6 +14,10 @@ export const ReviewModal = ({ booking, onClose, onSubmitReview }) => {
     e.preventDefault();
     if (!comment.trim()) {
       toast.error('Please write a brief comment describing your rental experience.');
+      return;
+    }
+    if (!rating || rating < 1) {
+      toast.error('Please select a star rating before publishing.');
       return;
     }
 
