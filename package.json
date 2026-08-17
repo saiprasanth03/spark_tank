@@ -9,9 +9,9 @@
     "build": "npm --prefix frontend run build"
   },
   "dependencies": {
-    "cors": "^2.8.5",
-    "dotenv": "^16.4.7",
-    "mongoose": "^8.9.5"
+    "cors": "^2.8.6",
+    "dotenv": "^16.6.1",
+    "mongoose": "^8.24.3"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"
