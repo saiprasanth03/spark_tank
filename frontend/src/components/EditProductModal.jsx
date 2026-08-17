@@ -92,9 +92,12 @@ export const EditProductModal = ({ isOpen, onClose, item, onSave, isSuperAdmin =
   const handleImageFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      const objectUrl = URL.createObjectURL(file);
-      setImageUrl(objectUrl);
-      toast.success('Image uploaded for preview!');
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImageUrl(reader.result);
+        toast.success('Image uploaded for preview!');
+      };
+      reader.readAsDataURL(file);
     }
   };
 

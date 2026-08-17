@@ -121,9 +121,12 @@ export const ListItemPage = () => {
     const file = e.target.files[0];
     if (file) {
       setSelectedFile(file);
-      const previewUrl = URL.createObjectURL(file);
-      setImagePreview(previewUrl);
-      toast.success('Product photo loaded!');
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+        toast.success('Product photo loaded!');
+      };
+      reader.readAsDataURL(file);
     }
   };
 
