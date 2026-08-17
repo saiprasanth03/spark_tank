@@ -1,7 +1,15 @@
 import mongoose from 'mongoose';
+import dotenv from 'dotenv';
 import { sampleItems } from '../frontend/src/data/items.js';
 
-const MONGODB_URI = 'mongodb+srv://24pa1a05k6_db_user:S9ljwbymSsNIqHs5@cluster0.8lqsniy.mongodb.net/test?retryWrites=true&w=majority';
+dotenv.config();
+
+const MONGODB_URI = process.env.MONGODB_URI;
+
+if (!MONGODB_URI) {
+  console.error('❌ MONGODB_URI is not defined in environment variables.');
+  process.exit(1);
+}
 
 const userSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true },
@@ -87,97 +95,16 @@ const Item = mongoose.models.Item || mongoose.model('Item', itemSchema);
 const Booking = mongoose.models.Booking || mongoose.model('Booking', bookingSchema);
 
 async function seed() {
-  console.log('Connecting to MongoDB Atlas (test database)...');
+  console.log('Connecting to MongoDB Atlas using MONGODB_URI env var...');
   await mongoose.connect(MONGODB_URI, { serverSelectionTimeoutMS: 8000 });
   console.log('Connected successfully!');
 
-  // 1. Seed Users
-  const sampleUsers = [
-    {
-      id: 'usr-1',
-      name: 'Sarah Jenkins',
-      email: 'sarah.j@example.com',
-      password: 'password123',
-      phone: '+91 98765 43210',
-      role: 'Seller / Owner',
-      location: 'SRKR College Road, Bhimavaram',
-      verified: true
-    },
-    {
-      id: 'usr-2',
-      name: 'Marcus Vance',
-      email: 'marcus.v@example.com',
-      password: 'password123',
-      phone: '+91 98765 43211',
-      role: 'Both',
-      location: 'J P Road, Bhimavaram',
-      verified: true
-    },
-    {
-      id: 'usr-3',
-      name: 'Ona Owner',
-      email: 'owner@example.com',
-      password: 'password123',
-      phone: '+91 98765 43212',
-      role: 'Seller / Owner',
-      location: 'Mavullamma Temple Road, Bhimavaram',
-      verified: true
-    },
-    {
-      id: 'usr-4',
-      name: 'Rahul Renter',
-      email: 'customer@example.com',
-      password: 'password123',
-      phone: '+91 98765 43213',
-      role: 'Consumer / Buyer',
-      location: 'Somaram Road, Bhimavaram',
-      verified: true
-    }
-  ];
-
-  for (const u of sampleUsers) {
-    await User.findOneAndUpdate({ email: u.email }, { ...u }, { upsert: true, new: true });
-  }
-  console.log(`✅ Users seeded in MongoDB Atlas (Collection: users)!`);
-
-  // 2. Seed Items
+  // Seed sample items
   for (const item of sampleItems) {
     await Item.findOneAndUpdate({ id: item.id }, { ...item }, { upsert: true, new: true });
   }
-  console.log(`✅ Items seeded in MongoDB Atlas (Collection: items) count: ${sampleItems.length}!`);
 
-  // 3. Seed Sample Booking
-  const sampleBooking = {
-    id: 'bk-1786890001',
-    itemId: 'item-1',
-    itemTitle: 'Canon EOS R5 Full-Frame Mirrorless Camera Kit',
-    itemCategory: 'Cameras',
-    itemImage: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=1200&q=80',
-    dailyRent: 450,
-    deposit: 3000,
-    totalRent: 1350,
-    totalPaid: 4350,
-    startDate: '2026-08-20',
-    endDate: '2026-08-23',
-    totalDays: 3,
-    renterName: 'Rahul Renter',
-    renterEmail: 'customer@example.com',
-    renterPhone: '+91 98765 43213',
-    ownerName: 'Sarah Jenkins',
-    ownerEmail: 'sarah.j@example.com',
-    ownerPhone: '+91 98765 43210',
-    stage: 'REQUEST_ACCEPTED',
-    status: 'Owner Accepted — Ready for Physical Inspection'
-  };
-
-  await Booking.findOneAndUpdate({ id: sampleBooking.id }, { ...sampleBooking }, { upsert: true, new: true });
-  console.log('✅ Bookings seeded in MongoDB Atlas (Collection: bookings)!');
-
-  const userCount = await User.countDocuments();
-  const itemCount = await Item.countDocuments();
-  const bookingCount = await Booking.countDocuments();
-  console.log(`🎉 SUMMARY: Users: ${userCount}, Items: ${itemCount}, Bookings: ${bookingCount}`);
-
+  console.log(`✅ Seeded ${sampleItems.length} items to database!`);
   await mongoose.disconnect();
   process.exit(0);
 }
