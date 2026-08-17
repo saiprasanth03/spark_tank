@@ -103,6 +103,8 @@ const bookingSchema = new mongoose.Schema({
   renterName: String,
   renterEmail: String,
   renterPhone: String,
+  renterIdProof: String,
+  renterAadhar: String,
   ownerName: String,
   ownerEmail: String,
   ownerPhone: String,
